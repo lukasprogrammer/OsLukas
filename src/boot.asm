@@ -34,7 +34,7 @@ mov dl, 0x80
 mov cl, 0x02
 mov ch, 0x00
 mov ah, 0x02
-mov al, 16
+mov al, KERNEL_SECTORS
 
 int 0x13
 
