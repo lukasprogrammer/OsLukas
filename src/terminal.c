@@ -4,6 +4,8 @@
 
 int terminal_pos = 0;
 unsigned char text_color = VGA_WHITE | (VGA_BLACK << 4);
+const char hex[]= "0123456789ABCDEF";
+
 
 void Make_color(unsigned char fg, unsigned char bg){
     text_color = fg | (bg << 4);
@@ -65,4 +67,35 @@ static void update_cursor(){
     outb(0x3D5, terminal_pos & 0xFF);
     outb(0x3D4, 0x0E);
     outb(0x3D5, (terminal_pos >> 8) & 0xFF);
+}
+
+void WriteHex(unsigned int value){
+    WriteTerminal("0x");
+    for(int i = 28; i >= 0; i = i - 4){
+        unsigned int digit = (value >> i & 0xF);
+
+        terminal_putchar(hex[digit]);
+    }
+    
+}
+void WriteInt(unsigned int value){
+    char digits[12];
+    int i = 0;
+    if(value != 0){
+        while(value > 0){
+            digits[i] = (value % 10) + '0';
+            value = value/10;
+            i++;
+        }
+    }else{
+        digits[0] = '0';
+        i++;
+    }
+    i--;
+    
+    while(i >= 0){
+        terminal_putchar(digits[i]);
+        i--;
+    }
+
 }

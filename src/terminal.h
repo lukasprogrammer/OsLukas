@@ -27,5 +27,7 @@ static inline void outb(unsigned short port, unsigned char value);
 static void update_cursor();
 void Make_color(unsigned char fg, unsigned char bg);
 void clear_terminal();
+void WriteHex(unsigned int value);
+void WriteInt(unsigned int value);
 
 #endif
