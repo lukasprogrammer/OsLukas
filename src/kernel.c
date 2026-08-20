@@ -11,6 +11,7 @@ void kernel_main(){
     WriteTerminal("Kernel started succesfully\n");
     Make_color(VGA_WHITE, VGA_BLACK);
     WriteTerminal("Welcome!\n");
+    PrintPrompt();
 
     idt_init();
     pic_remap();

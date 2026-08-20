@@ -104,3 +104,7 @@ void WriteInt(unsigned int value){
     }
 
 }
+
+void PrintPrompt(){
+    WriteTerminal("LukasOS>");
+}

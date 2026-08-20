@@ -1,5 +1,6 @@
 #ifndef KEYBOARD_H
 #define KEYBOARD_H
+#define INPUT_SIZE 128
 
 
 static const char scancode_to_ascii[128] = {
@@ -123,6 +124,10 @@ static const char scancode_to_ascii_shift[128] = {
     0,      // 0x38 Alt
     ' '     // 0x39 Space
 };
+
+
+
 void keyboard_handler(void);
+
 
 #endif

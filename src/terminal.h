@@ -19,11 +19,12 @@
 #define VGA_WHITE         15
 #define VIDEO ((volatile unsigned short *)0xB8000)
 
-void Newline(void);
+void NewLine(void);
 void Scroll();
 void terminal_putchar(char c);
 void WriteTerminal(const char* msg);
 void delete_char();
+void PrintPrompt();
 static void update_cursor();
 void Make_color(unsigned char fg, unsigned char bg);
 void clear_terminal();
