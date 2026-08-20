@@ -109,3 +109,32 @@ isr_common:
 
     iret
 
+global irq0
+extern irq_handler
+
+global irq1
+
+irq1:
+    push dword 0
+    push dword 33
+    jmp irq_common  
+
+irq0:
+    push dword 0
+    push dword 32
+    jmp irq_common
+
+irq_common:
+    pusha
+
+    mov eax, esp
+    push eax
+
+    call irq_handler
+
+    add esp, 4
+
+    popa
+    add esp, 8
+
+    iret

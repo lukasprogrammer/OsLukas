@@ -1,5 +1,7 @@
 #include "interrupts.h"
 #include "terminal.h"
+#include "io.h"
+#include "keyboard.h"
 
 const char *exception_messages[32] = {
     "Divide Error",                         // 0
@@ -56,4 +58,17 @@ void exception_handler(struct registers *regs){
     while(1){
 
     }
+}
+volatile unsigned int ticks = 0;
+void irq_handler(struct registers *regs){
+    if(regs->int_no == 32){
+        ticks++;
+    }
+    if(regs->int_no == 33){
+        keyboard_handler();
+    }
+
+
+
+    outb(0x20, 0x20);
 }

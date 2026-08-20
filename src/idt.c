@@ -1,7 +1,10 @@
 #include "idt.h"
-extern void isr0(void);
+
 struct idt_entry idt[256];
 struct idt_ptr idtp;
+
+extern void irq0(void);
+extern void irq1(void);
 
 extern void isr0(void);
 extern void isr1(void);
@@ -42,6 +45,7 @@ void idt_init(void)
     idtp.limit = sizeof(idt) - 1;
     idtp.base = (unsigned int)&idt;
 
+    
     idt_set_gate(0, (unsigned int)isr0);
     idt_set_gate(1, (unsigned int)isr1);
     idt_set_gate(2, (unsigned int)isr2);
@@ -75,6 +79,9 @@ void idt_init(void)
     idt_set_gate(30, (unsigned int)isr30);
     idt_set_gate(31, (unsigned int)isr31);
 
+    idt_set_gate(32, (unsigned int)irq0);
+    idt_set_gate(33, (unsigned int)irq1);
+
 
     __asm__ volatile("lidt %0" : : "m"(idtp));
 }
@@ -86,3 +93,4 @@ void idt_set_gate(int number, unsigned int handler){
     idt[number].zero = 0;
     idt[number].type_attr = 0x8E;
 }
+

@@ -3,8 +3,11 @@ OBJECTS = \
 	./build/interrupts.asm.o \
 	./build/kernel.o \
 	./build/terminal.o \
-	./build/idt.o\
-	./build/interrupts.o
+	./build/idt.o \
+	./build/interrupts.o \
+	./build/pic.o \
+	./build/pit.o \
+	./build/keyboard.o
 
 all:
 	nasm -f elf -g ./src/kernel.asm -o ./build/kernel.asm.o
@@ -14,6 +17,9 @@ all:
 	i686-elf-gcc -I./src -std=gnu99 -c ./src/kernel.c -o ./build/kernel.o
 	i686-elf-gcc -I./src -std=gnu99 -c ./src/terminal.c -o ./build/terminal.o
 	i686-elf-gcc -I./src -std=gnu99 -c ./src/idt.c -o ./build/idt.o
+	i686-elf-gcc -I./src -std=gnu99 -c ./src/pic.c -o ./build/pic.o
+	i686-elf-gcc -I./src -std=gnu99 -c ./src/pit.c -o ./build/pit.o
+	i686-elf-gcc -I./src -std=gnu99 -c ./src/keyboard.c -o ./build/keyboard.o
 
 	i686-elf-ld -g -relocatable $(OBJECTS) -o ./build/completeKernel.o
 
@@ -49,3 +55,6 @@ clean:
 	rm -f ./build/idt.o
 	rm -f ./build/completeKernel.o
 	rm -f ./build/interrupts.o
+	rm -f ./build/pic.o
+	rm -f ./build/pit.o
+	rm -f ./build/keyboard.o

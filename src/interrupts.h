@@ -18,6 +18,8 @@ struct registers {
     unsigned int eflags;
 };
 
+extern volatile unsigned int ticks;
+
 void exception_handler(struct registers *regs);
 
 #endif

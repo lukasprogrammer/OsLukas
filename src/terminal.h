@@ -23,7 +23,7 @@ void Newline(void);
 void Scroll();
 void terminal_putchar(char c);
 void WriteTerminal(const char* msg);
-static inline void outb(unsigned short port, unsigned char value);
+void delete_char();
 static void update_cursor();
 void Make_color(unsigned char fg, unsigned char bg);
 void clear_terminal();

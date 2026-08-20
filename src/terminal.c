@@ -1,5 +1,6 @@
 #include "terminal.h"
 #include "kernel.h"
+#include "io.h"
 
 
 int terminal_pos = 0;
@@ -32,11 +33,19 @@ void Scroll(){
     }
     terminal_pos = 80*24;
 }
+void delete_char(){
+    if(terminal_pos > 0){
+        VIDEO[--terminal_pos] = (0x07 << 8) | ' ';
+    }
+
+}
 void terminal_putchar(char c){
 
 
     if(c == '\n'){
         NewLine();
+    }else if(c == '\b'){
+        delete_char();
     }else{
         VIDEO[terminal_pos] = (text_color << 8)| c;
         terminal_pos++;
@@ -56,11 +65,7 @@ void WriteTerminal(const char *msg){
     }
 }
 
-static inline void outb(unsigned short port, unsigned char value){
-    __asm__ volatile("outb %0, %1"
-                    :
-                    : "a"(value), "Nd"(port));
-}
+
 
 static void update_cursor(){
     outb(0x3D4, 0x0F);
