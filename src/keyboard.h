@@ -129,5 +129,8 @@ static const char scancode_to_ascii_shift[128] = {
 
 void keyboard_handler(void);
 
+static int shift_pressed;
+static char input_buffer[INPUT_SIZE];
+static unsigned int input_pos;
 
 #endif
