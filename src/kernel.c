@@ -5,17 +5,22 @@
 #include "pic.h"
 #include "io.h"
 #include "pit.h"
+#include "memory.h"
 
 void kernel_main(){
-    Make_color(VGA_GREEN, VGA_BLACK);
-    WriteTerminal("Kernel started succesfully\n");
-    Make_color(VGA_WHITE, VGA_BLACK);
-    WriteTerminal("Welcome!\n");
-    PrintPrompt();
-
     idt_init();
     pic_remap();
     pit_init(100);
+    InitializeBitmap();
+
+    Make_color(VGA_GREEN, system_bgcolor);
+    WriteTerminal("Kernel started succesfully\n");
+    Make_color(system_fgcolor, system_bgcolor);
+    WriteTerminal("WELCOME TO LUKASOS, LIGHTWEIGHT AND VERY FAST!\n");
+    PrintPrompt();
+
+
+
 
 
     __asm__ volatile("sti");

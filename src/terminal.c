@@ -2,15 +2,20 @@
 #include "kernel.h"
 #include "io.h"
 
+unsigned char system_fgcolor = VGA_WHITE;
+unsigned char system_bgcolor = VGA_BLACK;
 
 int terminal_pos = 0;
 unsigned char text_color = VGA_WHITE | (VGA_BLACK << 4);
 const char hex[]= "0123456789ABCDEF";
 
 
+
 void Make_color(unsigned char fg, unsigned char bg){
     text_color = fg | (bg << 4);
+
 }
+
 
 void clear_terminal(){
     for(int i = 0; i < 80*25;i++){
@@ -22,6 +27,10 @@ void clear_terminal(){
 
 void NewLine(){
     terminal_pos = (terminal_pos/80 + 1)*80;
+
+    if (terminal_pos >= 80 * 25) {
+        Scroll();
+    }
 }
 
 void Scroll(){
@@ -29,7 +38,7 @@ void Scroll(){
         VIDEO[i] = VIDEO[i + 80];
     }
     for(int i = 80 * 24; i <= 80*25-1;i++){
-        VIDEO[i] = (0x07 << 8) | ' ';
+        VIDEO[i] = ((system_fgcolor | (system_bgcolor << 4) )<< 8) | ' ';
     }
     terminal_pos = 80*24;
 }

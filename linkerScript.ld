@@ -5,24 +5,28 @@ SECTIONS
 {
     . = 0x10000;
 
-    .text : ALIGN(4096)
+    kernel_start = .;
+
+    .text :
     {
         *(.text)
     }
 
-    .rodata : ALIGN(4096)
+    .rodata :
     {
         *(.rodata)
     }
 
-    .data : ALIGN(4096)
+    .data :
     {
         *(.data)
     }
 
-    .bss : ALIGN(4096)
+    .bss :
     {
         *(COMMON)
         *(.bss)
     }
+
+    kernel_end = .;
 }

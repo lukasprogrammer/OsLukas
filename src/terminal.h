@@ -19,6 +19,8 @@
 #define VGA_WHITE         15
 #define VIDEO ((volatile unsigned short *)0xB8000)
 
+extern unsigned char system_fgcolor;
+extern unsigned char system_bgcolor;
 void NewLine(void);
 void Scroll();
 void terminal_putchar(char c);
