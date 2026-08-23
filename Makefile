@@ -8,8 +8,10 @@ OBJECTS = \
 	./build/pic.o \
 	./build/pit.o \
 	./build/keyboard.o \
-	./build/shell.o\
-	./build/memory.o
+	./build/shell.o \
+	./build/memory.o \
+	./build/paging.o \
+	./build/heap.o
 
 all:
 	nasm -f elf -g ./src/kernel.asm -o ./build/kernel.asm.o
@@ -24,6 +26,8 @@ all:
 	i686-elf-gcc -I./src -std=gnu99 -c ./src/keyboard.c -o ./build/keyboard.o
 	i686-elf-gcc -I./src -std=gnu99 -c ./src/shell.c -o ./build/shell.o
 	i686-elf-gcc -I./src -std=gnu99 -c ./src/memory.c -o ./build/memory.o
+	i686-elf-gcc -I./src -std=gnu99 -c ./src/paging.c -o ./build/paging.o
+	i686-elf-gcc -I./src -std=gnu99 -c ./src/heap.c -o ./build/heap.o
 
 	i686-elf-ld -g -relocatable $(OBJECTS) -o ./build/completeKernel.o
 
@@ -64,3 +68,5 @@ clean:
 	rm -f ./build/shell.o
 	rm -f ./build/completeKernel.o
 	rm -f ./build/memory.o
+	rm -f ./build/paging.o
+	rm -f ./build/heap.o

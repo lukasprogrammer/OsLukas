@@ -4,10 +4,6 @@
 #define MEMORY_MAP_COUNT  ((volatile unsigned short *)0x4FF0)
 #define MEMORY_MAP_BUFFER ((volatile struct memory_map_entry *)0x5000)
 
-#define PAGE_SIZE       0x1000
-#define MAX_MEMORY      (128 * 1024 * 1024)
-#define MAX_PAGES       (MAX_MEMORY / PAGE_SIZE)
-#define BITMAP_SIZE     (MAX_PAGES / 8)
 
 static unsigned char page_bitmap[BITMAP_SIZE];
 static unsigned char reserved_bitmap[BITMAP_SIZE];

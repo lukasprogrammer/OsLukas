@@ -22,7 +22,7 @@ void ProcessCommand(const char *input){
     int argc = ParseCommand(input, argv, 10);
     if(StringEquals(argv[0], "help")){
         Make_color(VGA_LIGHT_BLUE, system_bgcolor);
-        WriteTerminal("Available Commands:\nhelp  - Show this help\nclear  - Clear the screen\nticks  - Show timer ticks\necho <msg>  - Echo a message\n");
+        WriteTerminal("Available Commands:\nhelp  - Show this help\nclear  - Clear the screen\nticks  - Show timer ticks\necho <msg>  - Echo a message\ncolor <foreground> <background>  - Change interface color\nmemmap  - Show memory map\nalloc  - Allocate first available memory page on stack\nfree <addr>  - Free page of memory on specified memory address\n");
         Make_color(system_fgcolor, system_bgcolor);
 
     }else if(StringEquals(argv[0], "color")){
@@ -76,7 +76,7 @@ void ProcessCommand(const char *input){
             if(FreePage(ReadInt(argv[1]))){
                 WriteTerminal("Page freed succesfully!\n");
             }else{
-                WriteTerminal("Incorrect address format\n");
+                WriteTerminal("Incorrect adress - adress already freed or incorrect format\n");
             }
         }else{
             WriteTerminal("Invalid Amount of arguments\n");

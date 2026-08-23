@@ -1,6 +1,12 @@
 #ifndef MEMORY_H
 #define MEMORY_H
 
+#define PAGE_SIZE       0x1000
+#define MAX_MEMORY      (128 * 1024 * 1024)
+#define MAX_PAGES       (MAX_MEMORY / PAGE_SIZE)
+#define BITMAP_SIZE     (MAX_PAGES / 8)
+
+
 struct memory_map_entry {
     unsigned long long base;
     unsigned long long length;

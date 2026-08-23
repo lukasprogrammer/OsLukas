@@ -2,7 +2,8 @@
 #define KERNEL_H
 
 void kernel_main(void);
-
+void switch_stack(unsigned int new_stack, void (*entry)(void));
+void kernel_after_stack_switch(void);
 
 
 

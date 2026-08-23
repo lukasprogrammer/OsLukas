@@ -1,16 +1,27 @@
 [BITS 32]
+
 global _start
+global switch_stack
 
 extern kernel_main
 
-
-
 _start:
 
-    mov word [0xB8004], 0x074B    ; K
+
     call kernel_main
-    
+
     jmp $
 
+switch_stack:
+    mov eax, [esp + 4]    ; new_stack
+    mov edx, [esp + 8]    ; entry function
 
-times 512-($-$$) db 0
+    mov esp, eax
+    mov ebp, eax
+
+    call edx
+
+.hang:
+    cli
+    hlt
+    jmp .hang
