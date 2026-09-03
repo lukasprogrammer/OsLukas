@@ -38,6 +38,8 @@ extern void isr28(void);
 extern void isr29(void);
 extern void isr30(void);
 extern void isr31(void);
+extern void scheduler_interrupt(void);
+extern void syscall_interrupt(void);
 
 
 void idt_init(void)
@@ -81,6 +83,10 @@ void idt_init(void)
 
     idt_set_gate(32, (unsigned int)irq0);
     idt_set_gate(33, (unsigned int)irq1);
+    
+    idt_set_gate(48, (unsigned int)scheduler_interrupt);
+    idt_set_gate(128, (unsigned int)syscall_interrupt);
+    idt[128].type_attr = 0xEE;
 
 
     __asm__ volatile("lidt %0" : : "m"(idtp));
@@ -90,6 +96,7 @@ void idt_set_gate(int number, unsigned int handler){
     idt[number].offset_low = handler & 0xFFFF;
     idt[number].offset_high = (handler >> 16) & 0xFFFF;
     idt[number].selector = 0x08;
+    
     idt[number].zero = 0;
     idt[number].type_attr = 0x8E;
 }

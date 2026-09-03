@@ -15,6 +15,7 @@ void MapPage(unsigned int virtual_addr, unsigned int physical_addr, unsigned int
 unsigned int GetPhysicalAddress(unsigned int virtual_addr);
 int UnmapPage(unsigned int virtual_addr);
 unsigned int CreateKernelStack(void);
+int IsUserAddress(unsigned int virtual_addr);
 
 
 static inline void InvalidatePage(unsigned int virtual_addr)

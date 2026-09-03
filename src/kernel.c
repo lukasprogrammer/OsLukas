@@ -8,6 +8,10 @@
 #include "memory.h"
 #include "paging.h"
 #include "heap.h"
+#include "task.h"
+#include "gdt.h"
+
+void DummyUserTask(void);
 void kernel_main(){
     idt_init();
     pic_remap();
@@ -15,6 +19,8 @@ void kernel_main(){
     InitializeBitmap();
     PagingInit();
     HeapInit();
+    gdt_init();
+    
     unsigned int new_stack = CreateKernelStack();
 
     if (new_stack == 0) {
@@ -48,9 +54,34 @@ void kernel_after_stack_switch(void)
     WriteTerminal("Kernel started succesfully\n");
     Make_color(system_fgcolor, system_bgcolor);
     WriteTerminal("WELCOME TO LUKASOS, LIGHTWEIGHT AND VERY FAST!\n");
+
+
+    Task *a = CreateTask(TaskA);
+    Task *b = CreateTask(IdleTask);
+    if (a == 0 || b == 0) {
+        WriteTerminal("Task creation failed");
+        while (1);
+    }
+    CreateUserTask(DummyUserTask);
+
     PrintPrompt();
+    StartScheduler();
 
+}
 
+void TaskA(void){
+    
+}
+
+void IdleTask(void)
+{
+    while (1) {
+        asm volatile("hlt");
+    }
+}
+
+void DummyUserTask(void)
+{
     while (1) {
     }
 }

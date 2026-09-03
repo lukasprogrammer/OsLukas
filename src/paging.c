@@ -57,6 +57,10 @@ void MapPage(unsigned int virtual_addr, unsigned int physical_addr, unsigned int
     if(page_directory[directory_index] & PAGE_PRESENT){
         unsigned int table_phys = page_directory[directory_index] & 0xFFFFF000;
         table = (unsigned int *)table_phys;
+
+        if(flags & PAGE_USER){
+            page_directory[directory_index] |= PAGE_USER;
+        }
         
     }else{
         unsigned int table_phys = AllocPage();
@@ -65,7 +69,12 @@ void MapPage(unsigned int virtual_addr, unsigned int physical_addr, unsigned int
         for(int i = 0; i < PAGE_ENTRIES; i++){
             table[i] = 0;
         }
-        page_directory[directory_index] = table_phys | PAGE_PRESENT | PAGE_WRITE;
+
+        unsigned int directory_flags = PAGE_PRESENT | PAGE_WRITE;
+        if(flags & PAGE_USER){
+            directory_flags |= PAGE_USER;
+        }
+        page_directory[directory_index] = table_phys | directory_flags;
     }
 
     table[table_index] = (physical_addr & 0xFFFFF000) | flags |PAGE_PRESENT;
@@ -122,4 +131,36 @@ unsigned int CreateKernelStack(void){
         MapPage(virtual, phys, PAGE_WRITE);
     }
     return KERNEL_STACK_TOP;
+}
+
+int IsUserAddress(unsigned int virtual_addr){
+    unsigned int directory_index = virtual_addr >> 22;
+    unsigned int table_index = (virtual_addr >> 12) & 0x3FF;
+
+
+    if (!(page_directory[directory_index] & PAGE_PRESENT)) {
+        return 0;
+    }
+
+    if (!(page_directory[directory_index] & PAGE_USER)) {
+        return 0;
+    }
+
+    unsigned int table_phys =
+    page_directory[directory_index] & 0xFFFFF000;
+
+    unsigned int *table =
+    (unsigned int *)table_phys;
+
+    unsigned int entry = table[table_index];
+
+    if (!(entry & PAGE_PRESENT)) {
+        return 0;
+    }
+
+    if (!(entry & PAGE_USER)) {
+        return 0;
+    }
+
+    return 1;
 }

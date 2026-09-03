@@ -2,6 +2,9 @@
 #include "terminal.h"
 #include "io.h"
 #include "keyboard.h"
+#include "task.h"
+#include "paging.h"
+#include "memory.h"
 
 const char *exception_messages[32] = {
     "Divide Error",                         // 0
@@ -60,15 +63,82 @@ void exception_handler(struct registers *regs){
     }
 }
 volatile unsigned int ticks = 0;
-void irq_handler(struct registers *regs){
+unsigned int irq_handler(struct registers *regs){
     if(regs->int_no == 32){
         ticks++;
+
+
+        unsigned int new_esp = Schedule((unsigned int)regs);
+
+        outb(0x20, 0x20);
+
+        return new_esp;
     }
     if(regs->int_no == 33){
         keyboard_handler();
+    }
+    if (regs->int_no == 48) {
+        return Schedule((unsigned int)regs);
+    }
+    if (regs->int_no == 128) {
+        if (regs->eax == 0) {
+            unsigned int addr = regs->ebx;
+            unsigned int len = regs->ecx;
+
+            if (len == 0) {
+                regs->eax = 0;
+                return (unsigned int)regs;
+            }
+
+            if (addr > 0xFFFFFFFFu - (len - 1)) {
+                regs->eax = 0xFFFFFFFF;
+                return (unsigned int)regs;
+            }
+
+            unsigned int page =
+                addr & 0xFFFFF000;
+
+            unsigned int end =
+                addr + len - 1;
+
+            unsigned int last_page =
+                end & 0xFFFFF000;
+
+            while(1){
+
+                if(!IsUserAddress(page)){  
+                    regs->eax = 0xFFFFFFFF;
+                    return (unsigned int)regs;
+                }
+
+                if(page == last_page){
+                    break;
+                }
+                page += PAGE_SIZE;
+            }
+
+            char *str = (char *)addr;
+
+            for (unsigned int i = 0; i < len; i++) {
+                terminal_putchar(str[i]);
+            }
+
+            regs->eax = len;    
+
+            return (unsigned int)regs;
+        }
+        if(regs->eax == 1){
+            MarkCurrentTaskDead();
+            return Schedule((unsigned int)regs);
+        }
     }
 
 
 
     outb(0x20, 0x20);
+    return (unsigned int)regs;
+}
+
+static void syscall_handler(struct registers *regs){
+
 }
