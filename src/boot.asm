@@ -11,9 +11,13 @@
     KERNEL_LOAD_SEG   equ 0x1000
     KERNEL_START_ADDR equ 0x10000
 
+    USER_LOAD_SEG     equ 0x3000
+    USER_LOAD_ADDR    equ 0x30000
+
     ; E820 memory map storage
     MEMORY_MAP_COUNT   equ 0x4FF0
     MEMORY_MAP_BUFFER  equ 0x5000
+    USER_PROGRAM_SIZE  equ 0x4FE0
     MAX_MEMORY_ENTRIES equ 128
 
 
@@ -70,6 +74,9 @@
         ; -----------------------------------------------------
 
         call load_kernel
+        call load_user
+
+        mov dword [USER_PROGRAM_SIZE], USER_SIZE
 
 
         ; Kernel loaded successfully.
@@ -196,7 +203,7 @@
         xor ax, ax
         mov ds, ax
 
-        mov si, disk_packet
+        mov si, kernel_disk_packet
 
         ; Use the actual drive we booted from
         mov dl, [boot_drive]
@@ -351,7 +358,7 @@
     ; destination = 0x1000:0x0000 = physical 0x10000
     ; ---------------------------------------------------------
 
-    disk_packet:
+    kernel_disk_packet:
 
         db 0x10                ; DAP size = 16 bytes
         db 0x00                ; reserved
@@ -365,6 +372,28 @@
 
 
 
+
+    user_disk_packet:
+        db 0x10
+        db 0x00
+        dw USER_SECTORS
+        dw 0x0000
+        dw USER_LOAD_SEG
+        dq USER_LBA
+
+
+    load_user:
+        xor ax, ax
+        mov ds, ax
+
+        mov si, user_disk_packet
+        mov dl, [boot_drive]
+
+        mov ah, 0x42
+        int 0x13
+
+        jc disk_read_error
+        ret
     ; =========================================================
     ; 32-BIT PROTECTED MODE
     ; =========================================================

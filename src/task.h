@@ -20,6 +20,9 @@ typedef struct Task{
     unsigned int user_stack_top;
     unsigned int state;
     unsigned int privilege;
+    unsigned int page_directory_phys;
+    unsigned int user_code_start;
+    unsigned int user_code_pages;
     void (*entry)(void);
     
 
@@ -39,13 +42,14 @@ void DestroyTask(Task *task);
 void CleanupDeadTasks(void);
 void BlockCurrentTask(void);
 void WakeTask(Task *task);
-static unsigned int CreateUserStack();
+static unsigned int CreateUserStack(unsigned int page_directory_phys);
 Task *CreateUserTask(void (*entry)(void));
 unsigned int CreateKernelStackT(void);
-static unsigned int CreateUserCode(void);
+static unsigned int CreateUserCode(unsigned int page_directory_phys);
+void MarkCurrentTaskBlocked(void);
 
 void MarkCurrentTaskDead(void);
-
+Task *GetCurrentTask(void);
 
 
 #endif 

@@ -10,14 +10,22 @@
 #define USER_STACK_SLOT_SIZE 0x10000
 #define USER_CODE_ADDR 0x40000000
 
+
+#define USER_PROGRAM_SOURCE   0x30000
+#define USER_PROGRAM_SIZE_PTR ((volatile unsigned int *)0x4FE0)
 #define USER_MESSAGE_ADDR (USER_CODE_ADDR + 0x40)
 static unsigned int next_task_id = 1;
 static unsigned int next_stack_top = 0xC1000000;
 
 static unsigned int next_user_stack_top = 0x80000000;
 
+unsigned int page_directory_phys;
+
 static Task *current_task = 0;
 static Task *task_list = 0;
+
+unsigned int user_code_start;
+unsigned int user_code_pages;
 
 Task *old_task;
 Task *next_task;
@@ -28,10 +36,12 @@ static Task *idle_task = 0;
 
 Task *CreateUserTask(void (*entry)(void)){
     Task *task = (Task *)kmalloc(sizeof(Task));
+    
 
     if(task == 0){
         return 0;
     }
+
 
     unsigned int kernel_stack_top = CreateKernelStackT();
 
@@ -39,18 +49,31 @@ Task *CreateUserTask(void (*entry)(void)){
         kfree(task);
         return 0;
     }
-    unsigned int user_stack_top   = CreateUserStack();
+    unsigned int user_pd =
+    CreateUserPageDirectory();
+    if(user_pd == 0){
+        return 0;
+    }
+
+    unsigned int user_stack_top   = CreateUserStack(user_pd);
 
     if (user_stack_top == 0) {
         return 0;
 
     }
 
-    unsigned int user_code = CreateUserCode();
+    unsigned int user_code = CreateUserCode(user_pd);
 
     if (user_code == 0) {
         return 0;
     }
+
+
+    unsigned int user_size =
+    *USER_PROGRAM_SIZE_PTR;
+
+    unsigned int user_pages =
+        (user_size + PAGE_SIZE - 1) / PAGE_SIZE;
 
     struct user_registers *regs =
     (struct user_registers *)
@@ -89,6 +112,10 @@ Task *CreateUserTask(void (*entry)(void)){
 
     task->kernel_stack_top = kernel_stack_top;
     task->user_stack_top = user_stack_top;
+    task->page_directory_phys =  user_pd;
+    task->user_code_start = user_code;
+    task->user_code_pages = user_pages;
+
 
     task->privilege = TASK_USER;
     task->next = 0;
@@ -98,86 +125,61 @@ Task *CreateUserTask(void (*entry)(void)){
     return task;
 }
 
-static unsigned int CreateUserCode(void)
+static unsigned int CreateUserCode(unsigned int page_directory_phys)
 {
-    unsigned int phys = AllocPage();
+    unsigned int size = *USER_PROGRAM_SIZE_PTR;
+    unsigned int pages = (size+PAGE_SIZE-1)/PAGE_SIZE;
+    
 
-    if (phys == 0) {
-        return 0;
+    for(int i = 0; i < pages;i++){
+
+        unsigned int phys = AllocPage();
+
+        if (phys == 0) {
+            for(unsigned int j = 0; j < i; j++){
+                unsigned int virtual = USER_CODE_ADDR + (j * PAGE_SIZE);
+                unsigned int old_phys = GetPhysicalAddress(virtual);
+                if(old_phys != 0){
+                    UnmapPageInDirectory(page_directory_phys, virtual);
+                    FreePage(old_phys & 0xFFFFF000);
+                }
+
+                
+            }
+            return 0;
+        }
+        unsigned int virt = USER_CODE_ADDR + (i * PAGE_SIZE);
+
+        MapPageInDirectory(
+            page_directory_phys,
+            virt,
+            phys,
+            PAGE_PRESENT | PAGE_WRITE | PAGE_USER
+        );
+        unsigned int offset = i * PAGE_SIZE;
+        unsigned int remaining = size - offset;
+        unsigned int bytes_to_copy;
+
+        if (remaining > PAGE_SIZE) {
+            bytes_to_copy = PAGE_SIZE;
+        } else {
+            bytes_to_copy = remaining;
+        }
+        unsigned char *destination =   (unsigned char *)phys;
+
+        unsigned char *source =
+            (unsigned char *)(USER_PROGRAM_SOURCE + offset);
+
+        for (unsigned int j = 0; j < bytes_to_copy; j++) {
+            destination[j] = source[j];
+        }
+        
+
     }
-
-    MapPage(
-        USER_CODE_ADDR,
-        phys,
-        PAGE_PRESENT | PAGE_WRITE | PAGE_USER
-    );
-
-    unsigned char *code = (unsigned char *)USER_CODE_ADDR;
-
-    code[0] = 0xB8;          // mov eax, 0
-    code[1] = 0x00;
-    code[2] = 0x00;
-    code[3] = 0x00;
-    code[4] = 0x00;
-
-    code[5] = 0xBB;          // mov ebx, 0x40000040
-    code[6] = 0x40;
-    code[7] = 0x00;
-    code[8] = 0x00;
-    code[9] = 0x40;
-
-    code[10] = 0xB9;         // mov ecx, 23
-    code[11] = 0x17;
-    code[12] = 0x00;
-    code[13] = 0x00;
-    code[14] = 0x00;
-
-    code[15] = 0xCD;
-    code[16] = 0x80;
-
-    code[17] = 0xB8;         // mov eax, 1
-    code[18] = 0x01;
-    code[19] = 0x00;
-    code[20] = 0x00;
-    code[21] = 0x00;
-
-    code[22] = 0xCD;
-    code[23] = 0x80;
-
-    code[24] = 0xEB;
-    code[25] = 0xFE;
-
-    char *msg = (char *)(USER_CODE_ADDR + 0x40);
-
-    msg[0]  = 'H';
-    msg[1]  = 'e';
-    msg[2]  = 'l';
-    msg[3]  = 'l';
-    msg[4]  = 'o';
-    msg[5]  = ' ';
-    msg[6]  = 'f';
-    msg[7]  = 'r';
-    msg[8]  = 'o';
-    msg[9]  = 'm';
-    msg[10] = ' ';
-    msg[11] = 'u';
-    msg[12] = 's';
-    msg[13] = 'e';
-    msg[14] = 'r';
-    msg[15] = ' ';
-    msg[16] = 's';
-    msg[17] = 'p';
-    msg[18] = 'a';
-    msg[19] = 'c';
-    msg[20] = 'e';
-    msg[21] = '!';
-    msg[22] = '\n';
-
-
     return USER_CODE_ADDR;
 }
 
-static unsigned int CreateUserStack(void){
+static unsigned int CreateUserStack(unsigned int page_directory_phys){
     unsigned int stack_top = next_user_stack_top;
 
     unsigned int stack_bottom =
@@ -186,10 +188,31 @@ static unsigned int CreateUserStack(void){
     for(int i = 0; i < USER_STACK_PAGES; i++){
         unsigned int phys = AllocPage();
         if(phys == 0){
+        for (unsigned int j = 0; j < i; j++) {
+
+            unsigned int virt =
+                stack_bottom + (j * PAGE_SIZE);
+
+            unsigned int old_phys =
+                GetPhysicalAddressInDirectory(
+                    page_directory_phys,
+                    virt
+                );
+
+            if (old_phys != 0) {
+
+                UnmapPageInDirectory(
+                    page_directory_phys,
+                    virt
+                );
+
+                FreePage(old_phys & 0xFFFFF000);
+            }
+        }
             return 0;
         }
         unsigned int virt = stack_bottom + (i * PAGE_SIZE);
-        MapPage(virt, phys, PAGE_PRESENT|PAGE_WRITE|PAGE_USER);
+        MapPageInDirectory(page_directory_phys, virt, phys, PAGE_PRESENT|PAGE_WRITE|PAGE_USER);
     }
     next_user_stack_top -= USER_STACK_SLOT_SIZE;
     return stack_top;
@@ -212,7 +235,19 @@ unsigned int CreateKernelStackT(void)
         unsigned int phys = AllocPage();
 
         if (phys == 0) {
-            return 0;
+        for (unsigned int j = 0; j < i; j++) {
+
+            unsigned int virt =
+                stack_bottom + (j * PAGE_SIZE);
+
+            unsigned int old_phys =
+                GetPhysicalAddress(virt);
+
+            if (old_phys != 0) {
+                UnmapPage(virt);
+                FreePage(old_phys & 0xFFFFF000);
+            }
+        }
         }
 
         unsigned int virt =
@@ -276,6 +311,9 @@ Task *CreateTask(void (*entry)(void)){
     task->user_stack_top = 0;
     task->next = 0;
     task->privilege = TASK_KERNEL;
+    task->page_directory_phys = GetKernelPageDirectory();
+    task->user_code_start = 0;
+    task->user_code_pages = 0;
 
     AddTask(task);
 
@@ -327,7 +365,9 @@ void StartScheduler(void){
     if (current_task->privilege == TASK_USER) {
         tss_set_kernel_stack(current_task->kernel_stack_top);
     }
-
+    SwitchPageDirectory(
+        current_task->page_directory_phys
+    );
     RestoreTask(current_task->esp);
 }
 unsigned int Schedule(unsigned int current_esp){
@@ -358,6 +398,9 @@ unsigned int Schedule(unsigned int current_esp){
             if (current_task->privilege == TASK_USER) {
                 tss_set_kernel_stack(current_task->kernel_stack_top);
             }
+            SwitchPageDirectory(
+                current_task->page_directory_phys
+            );
             return current->esp;
         }
         current = current->next;
@@ -366,6 +409,10 @@ unsigned int Schedule(unsigned int current_esp){
 
     current_task = idle_task;
     idle_task->state = TASK_RUNNING;
+
+    SwitchPageDirectory(
+        idle_task->page_directory_phys
+    );
     return idle_task->esp;
 
 
@@ -393,6 +440,74 @@ void DestroyTask(Task *task){
     }
     if(task ==current_task){
         return;
+    }
+    if (task->privilege == TASK_USER) {
+
+        for (unsigned int i = 0;
+            i < task->user_code_pages;
+            i++) {
+
+            unsigned int virt =
+                task->user_code_start +
+                (i * PAGE_SIZE);
+
+            unsigned int phys =
+                GetPhysicalAddressInDirectory(
+                    task->page_directory_phys,
+                    virt
+                );
+
+            if (phys != 0) {
+
+                UnmapPageInDirectory(
+                    task->page_directory_phys,
+                    virt
+                );
+
+                FreePage(phys & 0xFFFFF000);
+            }
+        }
+        unsigned int stack_bottom =
+        task->user_stack_top -
+        (USER_STACK_PAGES * PAGE_SIZE);
+
+        for (unsigned int i = 0;
+            i < USER_STACK_PAGES;
+            i++) {
+
+            unsigned int virt =
+                stack_bottom + (i * PAGE_SIZE);
+
+            unsigned int phys =
+                GetPhysicalAddressInDirectory(
+                    task->page_directory_phys,
+                    virt
+                );
+
+            if (phys != 0) {
+
+                UnmapPageInDirectory(
+                    task->page_directory_phys,
+                    virt
+                );
+
+                FreePage(phys & 0xFFFFF000);
+            }
+        }
+        FreePageTableInDirectory(
+            task->page_directory_phys,
+            256
+        );
+
+        FreePageTableInDirectory(
+            task->page_directory_phys,
+            511
+        );
+
+        FreePage(
+            task->page_directory_phys
+        );
+        
     }
     unsigned int stack_bottom = task->kernel_stack_top - (TASK_STACK_PAGES * PAGE_SIZE);
 
@@ -495,4 +610,13 @@ void WakeTask(Task *task){
     if(task->state == TASK_BLOCKED){
         task->state = TASK_READY;
     }
+}
+void MarkCurrentTaskBlocked(void){
+    if(current_task != 0){
+        current_task->state = TASK_BLOCKED;
+    }
+
+}
+Task *GetCurrentTask(void){
+    return current_task;
 }

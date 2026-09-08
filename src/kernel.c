@@ -10,6 +10,7 @@
 #include "heap.h"
 #include "task.h"
 #include "gdt.h"
+#include "keyboard.h"
 
 void DummyUserTask(void);
 void kernel_main(){
@@ -62,6 +63,8 @@ void kernel_after_stack_switch(void)
         WriteTerminal("Task creation failed");
         while (1);
     }
+    KeyboardClearQueue();
+    KeyboardSetUserMode(1);
     CreateUserTask(DummyUserTask);
 
     PrintPrompt();

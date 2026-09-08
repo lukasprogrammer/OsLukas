@@ -16,6 +16,31 @@ unsigned int GetPhysicalAddress(unsigned int virtual_addr);
 int UnmapPage(unsigned int virtual_addr);
 unsigned int CreateKernelStack(void);
 int IsUserAddress(unsigned int virtual_addr);
+unsigned int GetKernelPageDirectory(void);
+unsigned int CreateUserPageDirectory(void);
+void SwitchPageDirectory(unsigned int directory_phys);
+
+unsigned int GetPhysicalAddressInDirectory(
+    unsigned int directory_phys,
+    unsigned int virtual_addr
+);
+
+void UnmapPageInDirectory(
+    unsigned int directory_phys,
+    unsigned int virtual_addr
+);
+
+void MapPageInDirectory(
+    unsigned int directory_phys,
+    unsigned int virtual_addr,
+    unsigned int physical_addr,
+    unsigned int flags
+);
+
+void FreePageTableInDirectory(
+    unsigned int directory_phys,
+    unsigned int directory_index
+);
 
 
 static inline void InvalidatePage(unsigned int virtual_addr)

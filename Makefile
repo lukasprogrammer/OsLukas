@@ -81,6 +81,7 @@ all:
 		-D KERNEL_SECTORS=$$KERNEL_SECTORS \
 		-D USER_SECTORS=$$USER_SECTORS \
 		-D USER_LBA=$$USER_LBA \
+		-D USER_SIZE=$$USER_SIZE \
 		-f bin \
 		./src/boot.asm \
 		-o ./bin/boot.bin; \

@@ -6,6 +6,8 @@
 #include "paging.h"
 #include "memory.h"
 
+
+
 const char *exception_messages[32] = {
     "Divide Error",                         // 0
     "Debug",                                // 1
@@ -46,9 +48,21 @@ void exception_handler(struct registers *regs){
     WriteTerminal("CPU EXCEPTION\nNumber: ");
     WriteInt(regs->int_no);
     WriteTerminal("\nType: ");
-    if (regs->int_no < 32) {
+    if (regs->int_no == 14) {
+        unsigned int fault_address;
+
+        asm volatile(
+            "mov %%cr2, %0"
+            : "=r"(fault_address)
+        );
+
+        WriteTerminal("Fault Address: ");
+        WriteHex(fault_address);
+        WriteTerminal("\n");
+        
+    } else if(regs->int_no < 32){
         WriteTerminal(exception_messages[regs->int_no]);
-    } else {
+    }else {
         WriteTerminal("Unknown Exception");
     }
     WriteTerminal("\nError Code: ");
@@ -122,6 +136,7 @@ unsigned int irq_handler(struct registers *regs){
             for (unsigned int i = 0; i < len; i++) {
                 terminal_putchar(str[i]);
             }
+            
 
             regs->eax = len;    
 
@@ -130,6 +145,23 @@ unsigned int irq_handler(struct registers *regs){
         if(regs->eax == 1){
             MarkCurrentTaskDead();
             return Schedule((unsigned int)regs);
+        }
+        if(regs->eax == 2){
+            char c = KeyboardReadChar();
+            if(c != 0){
+                regs->eax = (unsigned int)c;
+                return (unsigned int)regs;
+            }
+            KeyboardWaitForInput();
+            MarkCurrentTaskBlocked();
+            regs->eax = 0;
+            return Schedule((unsigned int)regs);
+
+            
+        }if (regs->eax == 3) {
+            KeyboardClearQueue();
+            regs->eax = 0;
+            return (unsigned int)regs;
         }
     }
 
