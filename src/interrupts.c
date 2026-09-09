@@ -144,6 +144,8 @@ unsigned int irq_handler(struct registers *regs){
         }
         if(regs->eax == 1){
             MarkCurrentTaskDead();
+            KeyboardSetUserMode(0);
+            PrintPrompt();
             return Schedule((unsigned int)regs);
         }
         if(regs->eax == 2){
@@ -163,6 +165,16 @@ unsigned int irq_handler(struct registers *regs){
             regs->eax = 0;
             return (unsigned int)regs;
         }
+        if (regs->eax == 4) {
+            clear_terminal();
+            return (unsigned int)regs;
+        }
+        if (regs->eax == 5) {
+            delete_char();
+            update_cursor();
+            return (unsigned int)regs;
+        }
+
     }
 
 

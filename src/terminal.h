@@ -27,7 +27,7 @@ void terminal_putchar(char c);
 void WriteTerminal(const char* msg);
 void delete_char();
 void PrintPrompt();
-static void update_cursor();
+void update_cursor();
 void Make_color(unsigned char fg, unsigned char bg);
 void clear_terminal();
 void WriteHex(unsigned int value);

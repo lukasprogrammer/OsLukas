@@ -76,7 +76,7 @@ void WriteTerminal(const char *msg){
 
 
 
-static void update_cursor(){
+void update_cursor(){
     outb(0x3D4, 0x0F);
     outb(0x3D5, terminal_pos & 0xFF);
     outb(0x3D4, 0x0E);

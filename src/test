@@ -1,0 +1,95 @@
+    vbe_setup:
+        mov ax, 0x0700
+        mov es, ax
+        mov di, 0
+
+        mov ax, 0x4F00
+
+        int 0x10
+
+        cmp ax, 0x004f
+        jne vbe_failed
+
+        mov si, [es:0x0e]
+        mov dx, [es:0x10]
+        
+        mov fs, dx
+    vbe_check_mode:
+        mov ax, [fs:si]
+        cmp ax, 0xFFFF
+        je vbe_modes_done
+
+        mov cx, ax
+
+        mov di, 0x200
+        mov ax, 0x4f01
+        int 0x10
+
+        cmp ax, 0x004f
+        jne vbe_failed
+
+        mov ax, [es:di + 0x12]
+
+        cmp ax, 1024
+        jne vbe_next_mode
+
+        mov ax, [es:di + 0x14]
+
+        cmp ax, 768
+        jne vbe_next_mode
+
+        mov al, [es:di + 0x19]
+        cmp al, 32
+        jne vbe_next_mode
+
+        mov ax, [es:di]
+        test ax, 0x80
+        jz vbe_next_mode
+
+        test ax, 0x01
+        jz vbe_next_mode
+
+
+        mov eax, [es:di +0x28]
+
+        mov bx, 0x4FD0
+        mov gs, bx;
+
+        mov [gs:0], eax
+
+        mov ax, [es:di + 0x10]
+        mov [gs:4], ax
+        mov ax, [es:di + 0x12]
+        mov [gs:6], ax
+        mov ax, [es:di + 0x14]
+        mov [gs:8], ax
+        mov al, [es:di + 0x19]
+        mov [gs:10], al
+        mov [gs:12], cx
+
+        mov bx, cx
+        or bx, 0x4000
+
+        mov ax, 0x4F02
+        int 0x10
+
+        cmp ax, 0x004F
+        jne vbe_failed
+
+        ret
+        
+
+
+
+    vbe_failed:
+        cli
+        hlt
+        jmp vbe_failed
+
+    vbe_next_mode:
+        add si, 2
+        jmp vbe_check_mode
+    
+    vbe_modes_done:
+        jmp vbe_failed
+        

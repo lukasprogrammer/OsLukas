@@ -16,7 +16,8 @@ OBJECTS = \
 	./build/heap.o \
 	./build/task.o \
 	./build/gdt.o \
-	./build/tss.o
+	./build/tss.o\
+	./build/graphics.o
 
 all:
 
@@ -51,6 +52,9 @@ all:
 	i686-elf-gcc -I./src -std=gnu99 -c ./src/task.c -o ./build/task.o
 	i686-elf-gcc -I./src -std=gnu99 -c ./src/gdt.c -o ./build/gdt.o
 	i686-elf-gcc -I./src -std=gnu99 -c ./src/tss.c -o ./build/tss.o
+	i686-elf-gcc -I./src -I./src/graphics -std=gnu99 -c ./src/graphics/graphics.c -o ./build/graphics.o
+
+
 
 	i686-elf-ld -g -relocatable $(OBJECTS) -o ./build/completeKernel.o
 
@@ -69,10 +73,12 @@ all:
 	\
 	USER_SIZE=$$(stat -c%s ./bin/user.bin); \
 	USER_SECTORS=$$((($$USER_SIZE + 511) / 512)); \
-	USER_LBA=$$((1 + $$KERNEL_SECTORS)); \
+	KERNEL_LBA=2; \
+	USER_LBA=$$(($$KERNEL_LBA + $$KERNEL_SECTORS)); \
 	\
 	echo "Kernel size: $$KERNEL_SIZE bytes"; \
 	echo "Kernel sectors: $$KERNEL_SECTORS"; \
+	echo "Kernel LBA: $$KERNEL_LBA"; \
 	echo "User size: $$USER_SIZE bytes"; \
 	echo "User sectors: $$USER_SECTORS"; \
 	echo "User LBA: $$USER_LBA"; \
@@ -86,13 +92,28 @@ all:
 		./src/boot.asm \
 		-o ./bin/boot.bin; \
 	\
+	nasm \
+		-D KERNEL_SECTORS=$$KERNEL_SECTORS \
+		-D USER_SECTORS=$$USER_SECTORS \
+		-D USER_LBA=$$USER_LBA \
+		-D USER_SIZE=$$USER_SIZE \
+		-f bin \
+		./src/stage2.asm \
+		-o ./bin/stage2.bin; \
+	\
 	cp ./bin/boot.bin ./bin/os.bin; \
+	cat ./bin/stage2.bin >> ./bin/os.bin; \
 	cat ./bin/kernel.bin >> ./bin/os.bin; \
 	dd if=/dev/zero bs=1 count=$$KERNEL_PADDING >> ./bin/os.bin 2>/dev/null; \
 	cat ./bin/user.bin >> ./bin/os.bin; \
 	dd if=/dev/zero bs=512 count=8 >> ./bin/os.bin 2>/dev/null
 
+run:
+	./build.sh
+	qemu-system-i386 -drive file=./bin/os.bin,format=raw
+
 clean:
+	rm -f ./bin/stage2.bin
 	rm -f ./bin/boot.bin
 	rm -f ./bin/kernel.bin
 	rm -f ./bin/os.bin
@@ -116,8 +137,10 @@ clean:
 	rm -f ./build/task.o
 	rm -f ./build/gdt.o
 	rm -f ./build/tss.o
+	rm -f ./build/graphics.o
 
 	rm -f ./build/completeKernel.o
 	rm -f ./bin/user.bin
 	rm -f ./build/user.o
 	rm -f ./build/user.elf
+	
