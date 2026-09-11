@@ -6,7 +6,7 @@
 #include "paging.h"
 #include "memory.h"
 #include "mouse.h"
-
+#include "graphics/fbterminal.h"
 
 
 const char *exception_messages[32] = {
@@ -46,9 +46,9 @@ const char *exception_messages[32] = {
 
 void exception_handler(struct registers *regs){
     Make_color(VGA_RED, VGA_BLACK);
-    WriteTerminal("CPU EXCEPTION\nNumber: ");
-    WriteInt(regs->int_no);
-    WriteTerminal("\nType: ");
+    FbWriteString("CPU EXCEPTION\nNumber: ");
+    FbWriteInt(regs->int_no);
+    FbWriteString("\nType: ");
     if (regs->int_no == 14) {
         unsigned int fault_address;
 
@@ -57,18 +57,18 @@ void exception_handler(struct registers *regs){
             : "=r"(fault_address)
         );
 
-        WriteTerminal("Fault Address: ");
+        FbWriteString("Fault Address: ");
         WriteHex(fault_address);
-        WriteTerminal("\n");
+        FbWriteString("\n");
         
     } else if(regs->int_no < 32){
-        WriteTerminal(exception_messages[regs->int_no]);
+        FbWriteString(exception_messages[regs->int_no]);
     }else {
-        WriteTerminal("Unknown Exception");
+        FbWriteString("Unknown Exception");
     }
-    WriteTerminal("\nError Code: ");
-    WriteHex(regs->err_code);
-    WriteTerminal("\nEIP: ");
+    FbWriteString("\nError Code: ");
+    FbWriteHex(regs->err_code);
+    FbWriteString("\nEIP: ");
     WriteHex(regs->eip);
 
     

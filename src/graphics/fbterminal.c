@@ -67,6 +67,7 @@ void UpdateTerminal(){
             DrawChar(x* TERMINAL_CELL_WIDTH, y* TERMINAL_CELL_HEIGHT, cell->character,cell->fg_color);
         }
     }
+    PresentFrame();
 }
 void FbWriteChar(char c, unsigned int deferUpdate)
 {
@@ -221,4 +222,6 @@ void FbWriteInt(unsigned int value){
     UpdateTerminal();
 
 }
+
+
 

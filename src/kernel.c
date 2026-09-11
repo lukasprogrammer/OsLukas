@@ -38,7 +38,7 @@ unsigned int framebuffer_pages;
 
 unsigned char *framebuffer;
 unsigned int *framebuffer32;
-
+volatile int screen_dirty = 0;
 
 
 
@@ -50,7 +50,6 @@ void kernel_main(){
     pit_init(100);
     InitializeBitmap();
     PagingInit();
-    MouseInit();
     KeyboardInit();
     HeapInit();
     gdt_init();
@@ -109,12 +108,22 @@ void kernel_after_stack_switch(void)
         unsigned int phys = framebuffer_phys_aligned + i * PAGE_SIZE;
         
         MapPage(virt, phys, PAGE_PRESENT|PAGE_WRITE);
+
+
+
     }
 
+    backbuffer = kmalloc(framebuffer_size);
+    __asm__ volatile("cli");
+
+    MouseInit();
+
+    __asm__ volatile("sti");
     Terminal_Init();
     KeyboardClearQueue();
     KeyboardSetUserMode(0);
     CreateUserTask(DummyUserTask);
+    CreateTask(MouseTask);
 
 
     FbPrintPrompt();
@@ -127,10 +136,19 @@ void kernel_after_stack_switch(void)
 
 }
 
-void TaskA(void){
-    
-}
+void MouseTask(void)
+{
+    while (1)
+    {
+        MouseUpdateCursor();
+        if (screen_dirty)
+        {
+            screen_dirty = 0;
+            PresentFrame();
+        }
 
+    }
+}
 void IdleTask(void)
 {
     while (1) {

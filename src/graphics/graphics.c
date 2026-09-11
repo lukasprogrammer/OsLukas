@@ -1,8 +1,8 @@
 #include "graphics.h"
 #include "../kernel.h"
 #include "font.h"
-
-
+#include "kernel.h"
+unsigned char *backbuffer;
 
 void PutPixel(int x, int y, unsigned int color){
     if(x >= framebuffer_width || y >= framebuffer_height || x < 0 || y < 0){
@@ -10,9 +10,21 @@ void PutPixel(int x, int y, unsigned int color){
     }
     unsigned int offset = y * framebuffer_pitch + x * 4;
 
-    unsigned int *pixel = (unsigned int *)(framebuffer + offset);
+    unsigned int *pixel = (unsigned int *)(backbuffer + offset);
     *pixel = color;
 }
+
+unsigned int GetPixel(int x, int y){
+    if(x >= framebuffer_width || y >= framebuffer_height || x < 0 || y < 0){
+        return 0;
+    }
+    unsigned int offset = y * framebuffer_pitch + x * 4;
+
+    
+    unsigned int *pixel = (unsigned int *)(backbuffer + offset);
+    return *pixel;
+
+}   
 
 void DrawRect(int x, int y, int width, int height, unsigned int color){
     for(int i = 0; i < height; i++){
@@ -108,3 +120,58 @@ void DrawString(int x, int y, const char *text, unsigned int color){
 }
 
 
+void PresentFrame(){
+    unsigned int *src = (unsigned int *)backbuffer;
+    unsigned int *dst = (unsigned int *)framebuffer;
+
+    unsigned int count = (framebuffer_size) / 4;
+
+    for(unsigned int i = 0; i < count; i++)
+    {
+        dst[i] = src[i];
+    }
+}
+
+void PresentRect(int x, int y, int width, int height)
+{
+    if(x < 0 || y < 0)
+        return;
+
+    if(x + width > framebuffer_width)
+        width = framebuffer_width - x;
+
+    if(y + height > framebuffer_height)
+        height = framebuffer_height - y;
+
+    for(int row = 0; row < height; row++)
+    {
+        unsigned int offset =
+            (y + row) * framebuffer_pitch + x * 4;
+
+        unsigned int *src =
+            (unsigned int *)(backbuffer + offset);
+
+        unsigned int *dst =
+            (unsigned int *)(framebuffer + offset);
+
+        for(int col = 0; col < width; col++)
+        {
+            dst[col] = src[col];
+        }
+    }
+}
+void PutPixelDirect(int x, int y, unsigned int color)
+{
+    if(x < 0 || y < 0 ||
+       x >= framebuffer_width ||
+       y >= framebuffer_height)
+        return;
+
+    unsigned int offset =
+        y * framebuffer_pitch + x * 4;
+
+    unsigned int *pixel =
+        (unsigned int *)(framebuffer + offset);
+
+    *pixel = color;
+}

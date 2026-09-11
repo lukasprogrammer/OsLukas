@@ -116,7 +116,9 @@ all:
 
 run:
 	./build.sh
-	qemu-system-i386 -drive file=./bin/os.bin,format=raw
+	qemu-system-i386 \
+	-drive format=raw,file=bin/os.bin \
+	-display gtk,grab-on-hover=on,show-cursor=off
 
 clean:
 	rm -f ./bin/stage2.bin

@@ -2,6 +2,7 @@
 #define GRAPHICS_H
 
 extern unsigned char *framebuffer;
+extern unsigned char *backbuffer;
 extern unsigned short framebuffer_pitch;
 extern unsigned short framebuffer_width;
 extern unsigned short framebuffer_height;
@@ -13,5 +14,9 @@ void DrawLine(int x1, int y1, int x2, int y2, unsigned int color);
 
 void DrawChar(int x, int y, char c, unsigned int color);
 void DrawString(int x, int y, const char *text, unsigned int color);
+unsigned int GetPixel(int x, int y);
+void PresentFrame();
+void PresentRect(int x, int y, int width, int height);
+void PutPixelDirect(int x, int y, unsigned int color);
 
 #endif

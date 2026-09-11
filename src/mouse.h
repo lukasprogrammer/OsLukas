@@ -9,5 +9,6 @@ void MouseInit(void);
 void MouseHandler(void);
 static void MouseWaitWrite();
 static void MouseWaitRead();
+void MouseUpdateCursor();
 
 #endif
