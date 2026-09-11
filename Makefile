@@ -17,7 +17,10 @@ OBJECTS = \
 	./build/task.o \
 	./build/gdt.o \
 	./build/tss.o\
-	./build/graphics.o
+	./build/graphics.o\
+	./build/font.o\
+	./build/fbterminal.o\
+	./build/mouse.o
 
 all:
 
@@ -52,7 +55,10 @@ all:
 	i686-elf-gcc -I./src -std=gnu99 -c ./src/task.c -o ./build/task.o
 	i686-elf-gcc -I./src -std=gnu99 -c ./src/gdt.c -o ./build/gdt.o
 	i686-elf-gcc -I./src -std=gnu99 -c ./src/tss.c -o ./build/tss.o
+	i686-elf-gcc -I./src -std=gnu99 -c ./src/mouse.c -o ./build/mouse.o
 	i686-elf-gcc -I./src -I./src/graphics -std=gnu99 -c ./src/graphics/graphics.c -o ./build/graphics.o
+	i686-elf-gcc -I./src -I./src/graphics -std=gnu99 -c ./src/graphics/font.c -o ./build/font.o
+	i686-elf-gcc -I./src -I./src/graphics -std=gnu99 -c ./src/graphics/fbterminal.c -o ./build/fbterminal.o
 
 
 
@@ -138,6 +144,9 @@ clean:
 	rm -f ./build/gdt.o
 	rm -f ./build/tss.o
 	rm -f ./build/graphics.o
+	rm -f ./build/font.o
+	rm -f ./build/fbterminal.o
+	rm -f ./build/mouse.o
 
 	rm -f ./build/completeKernel.o
 	rm -f ./bin/user.bin

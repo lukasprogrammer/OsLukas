@@ -7,6 +7,7 @@ void kernel_after_stack_switch(void);
 void TaskA(void);
 void TaskB(void);
 void IdleTask(void);
+extern volatile unsigned int mouse_packet_count;
 
 
 

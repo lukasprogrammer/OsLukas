@@ -5,7 +5,7 @@
 int StringEquals(const char *a, const char *b);
 void ProcessCommand(const char *command);
 int ParseCommand(char *input, char *argv[], int max_args);
-int ParseColor(const char *name);
+unsigned int ParseColor(const char *name);
 static const char *vga_color_names[16] = {
     "black",          // 0
     "blue",           // 1

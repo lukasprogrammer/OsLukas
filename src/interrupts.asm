@@ -130,6 +130,7 @@ extern irq_handler
 
 global irq1
 global scheduler_interrupt
+global irq12
 
 global syscall_interrupt
 
@@ -148,6 +149,10 @@ scheduler_interrupt:
     push dword 48
     jmp irq_common
 
+irq12:
+    push dword 0
+    push dword 44
+    jmp irq_common
 
 syscall_interrupt:
     push dword 0

@@ -5,6 +5,7 @@
 #include "task.h"
 #include "paging.h"
 #include "memory.h"
+#include "mouse.h"
 
 
 
@@ -90,6 +91,12 @@ unsigned int irq_handler(struct registers *regs){
     }
     if(regs->int_no == 33){
         keyboard_handler();
+    }
+    if(regs->int_no == 0x2c){
+        MouseHandler();
+
+        outb(0xA0, 0x20);  // EOI to slave
+        outb(0x20, 0x20);  // EOI to master
     }
     if (regs->int_no == 48) {
         return Schedule((unsigned int)regs);

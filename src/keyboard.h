@@ -131,6 +131,7 @@ void keyboard_handler(void);
 void KeyboardWaitForInput(void);
 void KeyboardClearQueue(void);
 void KeyboardSetUserMode(int enabled);
+void KeyboardInit();
 static int shift_pressed;
 static char input_buffer[INPUT_SIZE];
 static unsigned int input_pos;

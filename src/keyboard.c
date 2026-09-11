@@ -4,6 +4,8 @@
 #include "interrupts.h"
 #include "shell.h"
 #include "task.h"
+#include "graphics/fbterminal.h"
+#include "graphics/graphics.h"
 
 #define KEY_QUEUE_SIZE 128
 
@@ -64,9 +66,15 @@ char KeyboardReadChar(void)
 
     return c;
 }
+void KeyboardInit(){
+    for(int i = 0; i < INPUT_SIZE; i++){
+        input_buffer[i] = 0;
+    }
+}
 void keyboard_handler(void)
 {
     unsigned char scancode = inb(0x60);
+    (void)scancode;
     char c;
 
 
@@ -87,35 +95,47 @@ void keyboard_handler(void)
                         QueueKey(c);
                         return;
                     }
+
+
                     
+
                     
                     if(c == '\b' ){
                         if(input_pos > 0){
                             input_pos--;
                             input_buffer[input_pos ] = '\0';
-                            terminal_putchar(c);
+                            FbBackspace();
                         }
+                        
                     }else if(c == '\n'){
 
                         input_buffer[input_pos] = '\0';
-                        NewLine();
-                        ProcessCommand(input_buffer);
+                        FbNewLine();
+
+                        if(input_pos > 0){
+                            ProcessCommand(input_buffer);
+                        }
+                        
 
                         input_pos = 0;
                         input_buffer[0] = '\0';
+                        
 
                         if (!user_input_mode) {
-                            PrintPrompt();
+                            FbPrintPrompt();
                         }
+                        
+                        
+                        
                     }else
                     {
                         if(input_pos < INPUT_SIZE -1){
-                        input_buffer[input_pos]= c;
-                        input_pos++;
-                        input_buffer[input_pos] = '\0';
-                        terminal_putchar(c);
-
-                        }         
+                            input_buffer[input_pos]= c;
+                            input_pos++;
+                            input_buffer[input_pos] = '\0';
+                            FbWriteChar(c, 0);    
+                        }  
+                         
                     }
                 }
 

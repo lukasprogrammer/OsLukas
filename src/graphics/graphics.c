@@ -1,5 +1,9 @@
 #include "graphics.h"
 #include "../kernel.h"
+#include "font.h"
+
+
+
 void PutPixel(int x, int y, unsigned int color){
     if(x >= framebuffer_width || y >= framebuffer_height || x < 0 || y < 0){
         return;
@@ -68,6 +72,39 @@ void DrawLine(int x1, int y1, int x2, int y2, unsigned int color){
     }
 
 
-
-
 }
+
+void DrawChar(int x, int y, char c, unsigned int color){
+    for(int row = 0; row < 8; row++){
+        unsigned char rowData = font[(unsigned char)c][row];
+        for(int col = 0; col < 8; col++){
+            
+            if((rowData)&(0x80 >> col)){
+                PutPixel(x + col, y + row, color);
+            }
+        }
+    }
+}
+
+
+void DrawString(int x, int y, const char *text, unsigned int color){
+    int z = 0;
+    int currentx = x;
+    int currenty = y;
+
+    while(text[z] != '\0'){
+        if(text[z] == '\n' || currentx + 8 >= framebuffer_width){
+            currentx = x;
+            currenty += 10;
+        }else{
+            DrawChar(currentx, currenty, text[z], color);
+            currentx += 9;
+        }
+
+
+
+        z++;
+    }
+}
+
+

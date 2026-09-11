@@ -12,6 +12,8 @@
 #include "gdt.h"
 #include "keyboard.h"
 #include "graphics/graphics.h"
+#include "graphics/fbterminal.h"
+#include "mouse.h"
 
 #define FRAMEBUFFER_ADDR_PTR ((volatile unsigned int *)0x4FD0)
 #define FRAMEBUFFER_PITCH_PTR ((volatile unsigned short *)0x4FD4)
@@ -48,13 +50,8 @@ void kernel_main(){
     pit_init(100);
     InitializeBitmap();
     PagingInit();
-
-
-
-
-
-
-
+    MouseInit();
+    KeyboardInit();
     HeapInit();
     gdt_init();
     
@@ -114,31 +111,19 @@ void kernel_after_stack_switch(void)
         MapPage(virt, phys, PAGE_PRESENT|PAGE_WRITE);
     }
 
-
-    DrawLine(100, 100, 500, 100, 0x00FFFFFF);  // horizontal
-    DrawLine(100, 100, 100, 500, 0x00FF0000);  // vertical
-    DrawLine(100, 100, 500, 500, 0x0000FF00);  // diagonal down-right
-    DrawLine(500, 500, 100, 200, 0x000000FF);  // back up-left
-
-    WriteTerminal("New kernel stack active!\n");
-    Make_color(VGA_GREEN, system_bgcolor);
-    WriteTerminal("Kernel started succesfully\n");
-    Make_color(system_fgcolor, system_bgcolor);
-    WriteTerminal("WELCOME TO LUKASOS, LIGHTWEIGHT AND VERY FAST!\n");
-
-
-    Task *a = CreateTask(TaskA);
-    Task *b = CreateTask(IdleTask);
-    if (a == 0 || b == 0) {
-        WriteTerminal("Task creation failed");
-        while (1);
-    }
+    Terminal_Init();
     KeyboardClearQueue();
-    KeyboardSetUserMode(1);
+    KeyboardSetUserMode(0);
     CreateUserTask(DummyUserTask);
 
-    PrintPrompt();
+
+    FbPrintPrompt();
+    
+
+
     StartScheduler();
+
+    
 
 }
 

@@ -5,6 +5,7 @@ struct idt_ptr idtp;
 
 extern void irq0(void);
 extern void irq1(void);
+extern void irq12(void);
 
 extern void isr0(void);
 extern void isr1(void);
@@ -83,6 +84,7 @@ void idt_init(void)
 
     idt_set_gate(32, (unsigned int)irq0);
     idt_set_gate(33, (unsigned int)irq1);
+    idt_set_gate(44, (unsigned int)irq12);
     
     idt_set_gate(48, (unsigned int)scheduler_interrupt);
     idt_set_gate(128, (unsigned int)syscall_interrupt);

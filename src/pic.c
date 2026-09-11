@@ -31,6 +31,6 @@ void pic_remap(){
     outb(PIC2_DATA, 0x01);
     io_wait();
 
-    outb(PIC1_DATA, 0xFC);
-    outb(PIC2_DATA, 0xFF);
+    outb(PIC1_DATA, 0xF8);
+    outb(PIC2_DATA, 0xEF);
 }
