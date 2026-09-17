@@ -48,6 +48,7 @@ struct user_registers {
     unsigned int ss;
 };
 extern volatile unsigned int ticks;
+extern volatile int screen_render_due;
 
 void exception_handler(struct registers *regs);
 

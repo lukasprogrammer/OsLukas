@@ -7,7 +7,7 @@
 #include "memory.h"
 #include "mouse.h"
 #include "graphics/fbterminal.h"
-
+volatile int screen_render_due = 0;
 
 const char *exception_messages[32] = {
     "Divide Error",                         // 0
@@ -81,6 +81,11 @@ volatile unsigned int ticks = 0;
 unsigned int irq_handler(struct registers *regs){
     if(regs->int_no == 32){
         ticks++;
+
+        if(ticks >= 2){
+            ticks = 0;
+            screen_render_due = 1;
+        }
 
 
         unsigned int new_esp = Schedule((unsigned int)regs);

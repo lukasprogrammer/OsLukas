@@ -14,6 +14,9 @@
 #include "graphics/graphics.h"
 #include "graphics/fbterminal.h"
 #include "mouse.h"
+#include "graphics/window.h"
+#include "drivers/ata.h"
+
 
 #define FRAMEBUFFER_ADDR_PTR ((volatile unsigned int *)0x4FD0)
 #define FRAMEBUFFER_PITCH_PTR ((volatile unsigned short *)0x4FD4)
@@ -39,6 +42,11 @@ unsigned int framebuffer_pages;
 unsigned char *framebuffer;
 unsigned int *framebuffer32;
 volatile int screen_dirty = 0;
+
+int previous_left_down = 0;
+int just_pressed = 0;
+int just_released = 0;
+
 
 
 
@@ -69,6 +77,12 @@ void kernel_main(){
     while (1) {
     }
 }
+void btnwindowadd(void){
+    AddWindow(200, 200, 400, 150, "This is a button window");
+    DrawAllWindows();
+    PresentFrame();
+}
+
 
 void kernel_after_stack_switch(void)
 {
@@ -115,19 +129,65 @@ void kernel_after_stack_switch(void)
 
     backbuffer = kmalloc(framebuffer_size);
     __asm__ volatile("cli");
-
     MouseInit();
-
     __asm__ volatile("sti");
     Terminal_Init();
     KeyboardClearQueue();
     KeyboardSetUserMode(0);
-    CreateUserTask(DummyUserTask);
-    CreateTask(MouseTask);
+    CreateTask(RenderTask);
+
+    
+    ATA_SelectSlave();
+    unsigned char ata_status = ATA_ReadStatus();
+
+    FbWriteString("ATA slave status: ");
+    FbWriteHex(ata_status);
+    FbWriteString("\n");
+
+
+
+    unsigned char disk_buffer[512];
+    int result = ATA_ReadSector(0,disk_buffer);
+
+    if(result == 0){
+        FbWriteString("Disk Says: ");
+
+        for(int i = 0; i < 19; i++){
+            FbWriteChar(disk_buffer[i], 1);
+        }
+        FbWriteString("\n");
+    }else{
+        FbWriteString("ATA read Failed!\n");
+    }
 
 
     FbPrintPrompt();
+
+
+
+
+    UpdateTerminal();
+
+    //TEST CODE
+
+
+    int win1 = AddWindow(100, 100, 300, 300, "Test1");
+    int win2 = AddWindow(500, 500, 200, 200, "Test2");
     
+
+    ButtonAdd(20, 40, 50, 50, 0x00459204, "WIN", btnwindowadd, win1);
+    
+
+    AddLabel(80, 80, "Hayy\nMy Name Is Lukas", 0x0000FF00, win1);
+    AddLabel(20, 20, "HELOOOOOOOOOOOOOOOOOOOOO", 0x00FF00BB, win2);
+    AddLabel(200, 30, "Amy is\nGay", 0x00FF00FF, win1);
+    DrawAllWindows();
+
+    PresentFrame();
+
+    //TEST CODE
+
+
 
 
     StartScheduler();
@@ -136,17 +196,104 @@ void kernel_after_stack_switch(void)
 
 }
 
-void MouseTask(void)
+void RenderTask(void)
 {
-    while (1)
+    while(1)
     {
-        MouseUpdateCursor();
-        if (screen_dirty)
+        if(mouse_moved)
         {
-            screen_dirty = 0;
-            PresentFrame();
-        }
+            int left_down =
+                mouse_buttons & 0x01;
 
+            just_pressed = 0;
+            just_released = 0;
+
+            if(!previous_left_down && left_down)
+            {
+                just_pressed = 1;
+            }
+            else if(previous_left_down && !left_down)
+            {
+                just_released = 1;
+            }
+
+
+            int focus_changed = 0;
+
+            if(just_pressed)
+            {
+                focus_changed =
+                    FocusWindow();
+            }
+
+
+            int buttons_changed =
+                UpdateTotalButtons();
+
+            int windows_changed =
+                UpdateAllWindows();
+
+
+            previous_left_down =
+                left_down;
+
+            if(window_full_redraw_needed ||
+               focus_changed)
+            {
+                DrawTerminal();
+                DrawAllWindows();
+                DrawGlobalButtons();
+                DrawGlobalLabels();
+
+                PresentFrame();
+
+                window_full_redraw_needed = 0;
+            }
+
+
+            else if(windows_changed)
+            {
+                for(int i = 0; i < window_list_pos; i++)
+                {
+                    Window *win = &windows_total[i];
+
+                    if(win->dirty_width > 0 &&
+                    win->dirty_height > 0)
+                    {
+                        RedrawRect(
+                            win->dirty_x,
+                            win->dirty_y,
+                            win->dirty_width,
+                            win->dirty_height
+                        );
+
+                        win->dirty_width = 0;
+                        win->dirty_height = 0;
+                    }
+                }
+            }
+
+            /*
+             * Only button state changed.
+             */
+            else if(buttons_changed)
+            {
+                DrawGlobalButtons();
+
+                PresentButtons();
+            }
+
+
+            /*
+             * Cursor is always the final layer.
+             */
+            MouseUpdateCursor();
+
+
+            mouse_moved = 0;
+            mouse_delta_x = 0;
+            mouse_delta_y = 0;
+        }
     }
 }
 void IdleTask(void)
@@ -156,11 +303,6 @@ void IdleTask(void)
     }
 }
 
-void DummyUserTask(void)
-{
-    while (1) {
-    }
-}
 
 
 

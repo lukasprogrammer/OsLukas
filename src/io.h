@@ -22,6 +22,18 @@ static inline unsigned char inb(unsigned short port)
 
     return value;
 }
+static inline unsigned short inw(unsigned short port)
+{
+    unsigned short value;
+
+    __asm__ volatile(
+        "inw %1, %0"
+        : "=a"(value)
+        : "Nd"(port)
+    );
+
+    return value;
+}
 
 static inline void io_wait(void)
 {

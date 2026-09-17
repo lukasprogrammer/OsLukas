@@ -48,6 +48,7 @@ void ProcessCommand(const char *input){
         } else {
             FbWriteString("Incorrect amount of arguments.\n");
         }
+        
     }else if(StringEquals(argv[0], "memmap")){
         if(argc == 2){
             PrintMemoryMap(ReadInt(argv[1]));
@@ -57,9 +58,11 @@ void ProcessCommand(const char *input){
             FbWriteString("Invalid Amount of arguments\n");
 
         }
+        
     }else if(StringEquals(argv[0], "clear")){
         FbClear();
-
+        return;
+        
     }else if(StringEquals(argv[0], "alloc")){
         unsigned int address = AllocPage();
         if(address == 0){
@@ -74,10 +77,12 @@ void ProcessCommand(const char *input){
             FbWriteHex(address);
             FbWriteString("\n");
         }
+        
 
     }else if(StringEquals(argv[0], "mouse")){
         FbWriteInt(mouse_packet_count);
         FbWriteString("\n");
+        
     }
     else if(StringEquals(argv[0], "free")){
         if(argc == 2){
@@ -89,11 +94,13 @@ void ProcessCommand(const char *input){
         }else{
             FbWriteString("Invalid Amount of arguments\n");
         }
+        
 
     }else if(StringEquals(argv[0], "ticks")){
         FbWriteString("Current ticks Passed: ");
         FbWriteInt(ticks);
         FbWriteString("\n");
+        
 
     }else if(StringEquals(argv[0], "echo")){
         for(int i = 1; i < argc; i++){
@@ -103,7 +110,9 @@ void ProcessCommand(const char *input){
             }
         }
 
+
         FbWriteString("\n");
+        
     }else if(argv[0][0] == '\0'){
         //nothing
     }else{
@@ -112,7 +121,10 @@ void ProcessCommand(const char *input){
         FbMakeColor(fg_color_sys, bg_color_sys);
         FbWriteString(argv[0]);
         FbWriteString("\n");
+    
     }
+    FbPrintPrompt();
+    UpdateTerminal();
 
 }
 int ParseCommand(char *input, char *argv[], int max_args){

@@ -122,9 +122,9 @@ void keyboard_handler(void)
                         
 
                         if (!user_input_mode) {
-                            FbPrintPrompt();
+                            //FbPrintPrompt();
                         }
-                        
+                        UpdateTerminal();
                         
                         
                     }else

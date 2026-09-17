@@ -1,7 +1,8 @@
-#include "fbterminal.h"
+#include "graphics/fbterminal.h"
 #include "graphics.h"
 #include "heap.h"
 #include "terminal.h"
+#include "graphics/window.h"
 unsigned int terminal_cols;
 unsigned int terminal_rows;
 
@@ -58,6 +59,25 @@ TerminalCell *GetTerminalCell(unsigned int column, unsigned int row){
     return &terminalcells[index];
 }
 void UpdateTerminal(){
+
+    DrawTerminal();
+    
+    DrawAllWindows();
+    DrawAllButtons();
+    DrawAllLabels();
+
+    PresentFrame();
+}
+void DrawTerminal(){
+
+    DrawRect(
+        0,
+        0,
+        framebuffer_width,
+        framebuffer_height,
+        bg_color_sys
+    );
+
     TerminalCell *cell;
 
     for(unsigned int x = 0; x < terminal_cols; x++){
@@ -67,7 +87,7 @@ void UpdateTerminal(){
             DrawChar(x* TERMINAL_CELL_WIDTH, y* TERMINAL_CELL_HEIGHT, cell->character,cell->fg_color);
         }
     }
-    PresentFrame();
+    
 }
 void FbWriteChar(char c, unsigned int deferUpdate)
 {
@@ -105,7 +125,6 @@ void FbWriteString(const char *text){
         i++;
 
     }
-    UpdateTerminal();
 }
 
 void FbScroll(){
@@ -152,6 +171,13 @@ void UpdateTerminalCell(unsigned int x, unsigned int y)
         cell->character,
         cell->fg_color
     );
+
+    PresentRect(
+        x*TERMINAL_CELL_WIDTH,
+        y*TERMINAL_CELL_HEIGHT,
+        TERMINAL_CELL_WIDTH,
+        TERMINAL_CELL_HEIGHT
+    );
 }
 void FbBackspace(){
     unsigned int cursorx = (cursor_pos - 1) % terminal_cols;
@@ -187,6 +213,7 @@ void FbClear(){
         }
     }  
     cursor_pos = 0;
+    FbPrintPrompt();
     UpdateTerminal();
 }
 

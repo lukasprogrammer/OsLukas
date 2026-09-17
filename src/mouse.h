@@ -10,5 +10,10 @@ void MouseHandler(void);
 static void MouseWaitWrite();
 static void MouseWaitRead();
 void MouseUpdateCursor();
+extern volatile int mouse_moved;
+extern int dx;
+extern int dy;
+extern int mouse_delta_x;
+extern int mouse_delta_y;
 
 #endif

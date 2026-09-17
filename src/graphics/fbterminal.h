@@ -14,6 +14,9 @@ typedef struct{
 
 extern unsigned int fg_color_sys;
 extern unsigned int bg_color_sys;
+extern unsigned int terminal_cols;
+extern unsigned int terminal_rows;
+
 TerminalCell *GetTerminalCell(unsigned int column, unsigned int row);
 void Terminal_Init();
 void UpdateTerminal();
@@ -28,4 +31,5 @@ void FbMakeColor(unsigned int fg_color, unsigned int bg_color);
 void FbClear();
 void FbWriteInt(unsigned int value);
 void FbWriteHex(unsigned int value);
+void DrawTerminal();
 #endif

@@ -20,7 +20,9 @@ OBJECTS = \
 	./build/graphics.o\
 	./build/font.o\
 	./build/fbterminal.o\
-	./build/mouse.o
+	./build/mouse.o\
+	./build/window.o\
+	./build/ata.o
 
 all:
 
@@ -59,7 +61,8 @@ all:
 	i686-elf-gcc -I./src -I./src/graphics -std=gnu99 -c ./src/graphics/graphics.c -o ./build/graphics.o
 	i686-elf-gcc -I./src -I./src/graphics -std=gnu99 -c ./src/graphics/font.c -o ./build/font.o
 	i686-elf-gcc -I./src -I./src/graphics -std=gnu99 -c ./src/graphics/fbterminal.c -o ./build/fbterminal.o
-
+	i686-elf-gcc -I./src -I./src/graphics -std=gnu99 -c ./src/graphics/window.c -o ./build/window.o
+	i686-elf-gcc -I./src -I./src/drivers -std=gnu99 -c ./src/drivers/ata.c -o ./build/ata.o
 
 
 	i686-elf-ld -g -relocatable $(OBJECTS) -o ./build/completeKernel.o
@@ -118,7 +121,7 @@ run:
 	./build.sh
 	qemu-system-i386 \
 	-drive format=raw,file=bin/os.bin \
-	-display gtk,grab-on-hover=on,show-cursor=off
+	-drive format=raw,file=filesystem.img,index=1,if=ide
 
 clean:
 	rm -f ./bin/stage2.bin
@@ -149,9 +152,11 @@ clean:
 	rm -f ./build/font.o
 	rm -f ./build/fbterminal.o
 	rm -f ./build/mouse.o
+	rm -f ./build/window.o
 
 	rm -f ./build/completeKernel.o
 	rm -f ./bin/user.bin
 	rm -f ./build/user.o
 	rm -f ./build/user.elf
+	rm -f ./build/ata.o
 	
