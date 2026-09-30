@@ -13,8 +13,8 @@
             "windowsSdkVersion": "10.0.26100.0",
             "cStandard": "c17",
             "cppStandard": "c++17",
-            "intelliSenseMode": "windows-msvc-x64",
-            "compilerPath": "cl.exe"
+            "intelliSenseMode": "linux-gcc-x86",
+            "compilerPath": "/home/lukas/opt/cross/bin/i686-elf-gcc"
         }
     ],
     "version": 4

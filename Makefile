@@ -22,7 +22,8 @@ OBJECTS = \
 	./build/fbterminal.o\
 	./build/mouse.o\
 	./build/window.o\
-	./build/ata.o
+	./build/ata.o\
+	./build/filesystem.o
 
 all:
 
@@ -63,6 +64,8 @@ all:
 	i686-elf-gcc -I./src -I./src/graphics -std=gnu99 -c ./src/graphics/fbterminal.c -o ./build/fbterminal.o
 	i686-elf-gcc -I./src -I./src/graphics -std=gnu99 -c ./src/graphics/window.c -o ./build/window.o
 	i686-elf-gcc -I./src -I./src/drivers -std=gnu99 -c ./src/drivers/ata.c -o ./build/ata.o
+	i686-elf-gcc -I./src -I./src/files -std=gnu99 -c ./src/files/filesystem.c -o ./build/filesystem.o
+
 
 
 	i686-elf-ld -g -relocatable $(OBJECTS) -o ./build/completeKernel.o
@@ -159,4 +162,5 @@ clean:
 	rm -f ./build/user.o
 	rm -f ./build/user.elf
 	rm -f ./build/ata.o
+	rm -f ./build/filesystem.o
 	

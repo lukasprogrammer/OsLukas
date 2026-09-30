@@ -4,6 +4,7 @@
 #include "kernel.h"
 #include "memory.h"
 #include "graphics/fbterminal.h"
+#include "files/filesystem.h"
 
 int StringEquals(const char *a, const char *b){
     int i = 0;
@@ -63,6 +64,38 @@ void ProcessCommand(const char *input){
         FbClear();
         return;
         
+    }else if(StringEquals(argv[0], "touch")){
+        if(argc == 2){
+            if(FS_CreateFile(argv[1]) != 0){
+                FbMakeColor(VGA_LIGHT_RED, bg_color_sys);
+                FbWriteString("Couldn't create File\n");
+                FbMakeColor(fg_color_sys, bg_color_sys);
+            }else{
+                FbMakeColor(VGA_LIGHT_GREEN, bg_color_sys);
+                FbWriteString("Succesfully created file\n");
+                FbMakeColor(fg_color_sys, bg_color_sys);
+            }
+        }else{
+            FbMakeColor(VGA_LIGHT_RED, bg_color_sys);
+            FbWriteString("Couldn't create file\n");
+            FbMakeColor(fg_color_sys, bg_color_sys);
+        }
+    }else if(StringEquals(argv[0], "cat")){
+        if(argc == 2){
+            unsigned char buffer[513];
+
+            int size = FS_ReadFile(argv[1], buffer);
+
+            if(size >= 0){
+                buffer[size] = '\0';
+                FbWriteString((char *)buffer);
+                FbWriteString("\n");
+            }else{
+                FbMakeColor(VGA_LIGHT_RED, bg_color_sys);
+                FbWriteString("Invalid file\n");
+                FbMakeColor(fg_color_sys, bg_color_sys);  
+            }
+        }
     }else if(StringEquals(argv[0], "alloc")){
         unsigned int address = AllocPage();
         if(address == 0){
@@ -96,6 +129,14 @@ void ProcessCommand(const char *input){
         }
         
 
+    }else if(StringEquals(argv[0], "ls")){
+        FbMakeColor(VGA_LIGHT_BLUE, bg_color_sys);
+        ListFiles();
+        FbMakeColor(fg_color_sys, bg_color_sys);
+    }else if(StringEquals(argv[0], "rm")){
+        if(argc == 2){
+            FS_DeleteFile(argv[1]);
+        }
     }else if(StringEquals(argv[0], "ticks")){
         FbWriteString("Current ticks Passed: ");
         FbWriteInt(ticks);

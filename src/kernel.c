@@ -16,6 +16,7 @@
 #include "mouse.h"
 #include "graphics/window.h"
 #include "drivers/ata.h"
+#include "files/filesystem.h"
 
 
 #define FRAMEBUFFER_ADDR_PTR ((volatile unsigned int *)0x4FD0)
@@ -146,19 +147,75 @@ void kernel_after_stack_switch(void)
 
 
 
-    unsigned char disk_buffer[512];
-    int result = ATA_ReadSector(0,disk_buffer);
+    unsigned char read_buffer[512];
+    unsigned char write_buffer[512];
+
+    for(int i = 0; i < 512; i++){
+        write_buffer[i] = 0;
+        read_buffer[i] = 0;
+    }
+
+    
+    // char *message = "HELLO FROM LUKAS OS! AHHAHAHAH";
+
+    // int i = 0;
+    // while(message[i] != '\0'){
+    //     write_buffer[i] = message[i];
+    //     i++;
+    // }
+    // ATA_WriteSector(1, write_buffer);
+
+    int result = ATA_ReadSector(1,read_buffer);
 
     if(result == 0){
         FbWriteString("Disk Says: ");
 
-        for(int i = 0; i < 19; i++){
-            FbWriteChar(disk_buffer[i], 1);
-        }
+        FbWriteString((char *)read_buffer);
         FbWriteString("\n");
     }else{
         FbWriteString("ATA read Failed!\n");
     }
+
+    int fs_result = Superblock_Init();
+
+    if(fs_result == 0){
+        FbWriteString("LukasFS superblock written\n");
+    }else{
+        FbWriteString("LukasFS superblock write failed\n");
+    }
+    LukasFS_Superblock sb;
+
+    if(Superblock_Read(&sb) == 0){
+        FbWriteString("Superblock read OK\n");
+
+        FbWriteString("Magic: ");
+        FbWriteString(sb.magic);
+        FbWriteString("\n");
+
+        FbWriteString("Version: ");
+        FbWriteInt(sb.version);
+        FbWriteString("\n");
+    }
+
+    int mount_result = FS_Mount();
+
+    if(mount_result == 0){
+        FbWriteString("LukasFS mounted successfully\n");
+    }
+    else if(mount_result == -1){
+        FbWriteString("LukasFS: disk read error\n");
+    }
+    else if(mount_result == -2){
+        FbWriteString("LukasFS: invalid filesystem\n");
+    }
+
+
+
+
+
+
+
+
 
 
     FbPrintPrompt();
@@ -171,19 +228,19 @@ void kernel_after_stack_switch(void)
     //TEST CODE
 
 
-    int win1 = AddWindow(100, 100, 300, 300, "Test1");
-    int win2 = AddWindow(500, 500, 200, 200, "Test2");
+    // int win1 = AddWindow(100, 100, 300, 300, "Test1");
+    // int win2 = AddWindow(500, 500, 200, 200, "Test2");
     
 
-    ButtonAdd(20, 40, 50, 50, 0x00459204, "WIN", btnwindowadd, win1);
+    // ButtonAdd(20, 40, 50, 50, 0x00459204, "WIN", btnwindowadd, win1);
     
 
-    AddLabel(80, 80, "Hayy\nMy Name Is Lukas", 0x0000FF00, win1);
-    AddLabel(20, 20, "HELOOOOOOOOOOOOOOOOOOOOO", 0x00FF00BB, win2);
-    AddLabel(200, 30, "Amy is\nGay", 0x00FF00FF, win1);
-    DrawAllWindows();
+    // AddLabel(80, 80, "Hayy\nMy Name Is Lukas", 0x0000FF00, win1);
+    // AddLabel(20, 20, "HELOOOOOOOOOOOOOOOOOOOOO", 0x00FF00BB, win2);
+    // AddLabel(200, 30, "Amy is\nGay", 0x00FF00FF, win1);
+    // DrawAllWindows();
 
-    PresentFrame();
+    // PresentFrame();
 
     //TEST CODE
 

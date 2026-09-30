@@ -41,18 +41,45 @@ int ATA_ReadSector(unsigned int lba, unsigned char *buffer){
     }
     return 0;
 }
-int ATA_WriteSector(unsigned int lba, const char *text){
+int ATA_WriteSector(unsigned int lba, unsigned char *buffer){
     outb(0x1F6, 0xF0 | ((lba >> 24) & 0x0F));
     outb(0x1F2, 1);
     outb(0x1F3, (unsigned char)(lba));
     outb(0x1F4, (unsigned char)(lba >> 8));
     outb(0x1F5, (unsigned char)(lba >> 16));
+    outb(0x1F7, 0x30);
 
     unsigned char status;
     do{
         status = inb(0x1F7);
     }while(status & 0x80);
 
-    
+    while(!(status & 0x08)){
+        status = inb(0x1F7);
+        if(status & 0x01)
+        {
+            return -1;
+        }
+    }
+
+    unsigned short *buffer16 = (unsigned short *)buffer;
+    for(int i = 0; i < 256; i++){
+        outw(0x1F0, buffer16[i]);
+    }
+
+    outb(0x1F7, 0xE7);
+
+    do
+    {
+        status = inb(0x1F7);
+    }
+    while(status & 0x80);
+
+    if(status & 0x01)
+    {
+        return -1;
+    }
+
+    return 0;
 
 }
