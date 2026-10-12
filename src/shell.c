@@ -5,6 +5,7 @@
 #include "memory.h"
 #include "graphics/fbterminal.h"
 #include "files/filesystem.h"
+#include "graphics/graphics.h"
 
 int StringEquals(const char *a, const char *b){
     int i = 0;
@@ -21,7 +22,7 @@ int StringEquals(const char *a, const char *b){
     return 1;
 }
 void ProcessCommand(const char *input){
-    char *argv[10];
+    char *argv[100];
     int argc = ParseCommand(input, argv, 10);
     if(StringEquals(argv[0], "help")){
         FbMakeColor(VGA_LIGHT_BLUE, bg_color_sys);
@@ -64,9 +65,53 @@ void ProcessCommand(const char *input){
         FbClear();
         return;
         
+    }else if(StringEquals(argv[0], "write")){
+        if(argc < 3){
+            FbWriteString("Usage: write <filename> <text>\n");
+            return;
+        }
+            char text[1024];
+            unsigned int pos = 0;
+
+            for(int i = 2; i < argc; i++){
+
+                if(i > 2){
+                    if(pos >= sizeof(text)){
+                        FbWriteString("Text too long\n");
+                        return;
+                    }
+                    text[pos++] = ' ';
+                }
+
+                for(unsigned int j = 0; argv[i][j] != '\0'; j++){
+                    if(pos >= sizeof(text)){
+                        FbWriteString("Text too long\n");
+                        return;
+                    }
+
+                    text[pos++] = argv[i][j];
+                }
+            }
+
+        int result = FS_WriteFile(argv[1], text, pos);
+        if(result != 0){
+            FbMakeColor(VGA_LIGHT_RED, bg_color_sys);
+            FbWriteString("Couldn't write to file\n");
+            FbMakeColor(fg_color_sys, bg_color_sys);
+        }
+        FbMakeColor(VGA_LIGHT_GREEN, bg_color_sys);
+        FbWriteString("Successfully written to file\n");
+        FbMakeColor(fg_color_sys, bg_color_sys);
+
     }else if(StringEquals(argv[0], "touch")){
         if(argc == 2){
-            if(FS_CreateFile(argv[1]) != 0){
+            int result = FS_CreateFile(argv[1]);
+            if(result != 0){
+                if(result == -4){
+                    FbMakeColor(VGA_LIGHT_RED, bg_color_sys);
+                    FbWriteString("File already exists\n");
+                    FbMakeColor(fg_color_sys, bg_color_sys);
+                }
                 FbMakeColor(VGA_LIGHT_RED, bg_color_sys);
                 FbWriteString("Couldn't create File\n");
                 FbMakeColor(fg_color_sys, bg_color_sys);
@@ -82,19 +127,20 @@ void ProcessCommand(const char *input){
         }
     }else if(StringEquals(argv[0], "cat")){
         if(argc == 2){
-            unsigned char buffer[513];
+            static unsigned char buffer[4097];
 
-            int size = FS_ReadFile(argv[1], buffer);
-
-            if(size >= 0){
-                buffer[size] = '\0';
-                FbWriteString((char *)buffer);
+            int size = FS_ReadFile(argv[1], buffer, sizeof(buffer) - 1);
+            if(size < 0){
+                FbWriteString("Failed to read file. Error: ");
+                FbWriteInt(size);
                 FbWriteString("\n");
-            }else{
-                FbMakeColor(VGA_LIGHT_RED, bg_color_sys);
-                FbWriteString("Invalid file\n");
-                FbMakeColor(fg_color_sys, bg_color_sys);  
+                return;
             }
+
+            buffer[size] = '\0';
+
+            FbWriteString((char *)buffer);
+            FbWriteString("\n");
         }
     }else if(StringEquals(argv[0], "alloc")){
         unsigned int address = AllocPage();

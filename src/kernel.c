@@ -176,13 +176,7 @@ void kernel_after_stack_switch(void)
         FbWriteString("ATA read Failed!\n");
     }
 
-    int fs_result = Superblock_Init();
 
-    if(fs_result == 0){
-        FbWriteString("LukasFS superblock written\n");
-    }else{
-        FbWriteString("LukasFS superblock write failed\n");
-    }
     LukasFS_Superblock sb;
 
     if(Superblock_Read(&sb) == 0){
@@ -209,11 +203,42 @@ void kernel_after_stack_switch(void)
         FbWriteString("LukasFS: invalid filesystem\n");
     }
 
+    // int resulto = FS_Format();
+    // if(resulto == 0){
+    //     FS_Mount();
+    //     FbWriteString("Filesystem formatted!\n");
+    // }
+    
 
 
+    // unsigned char data[1200];
 
+    // for(unsigned int i = 0; i < 1200; i++){
+    //     data[i] = 'A';
+    // }
+    // FS_CreateFile("large.txt");
 
+    // int resultr = FS_WriteFile("large.txt", data, 1200);
+    // unsigned char data[1200];
 
+    // for(unsigned int i = 0; i < 1200; i++){
+    //     data[i] = 'A' + (i % 26);
+    // }
+
+    // FS_CreateFile("large.txt");
+    // FS_WriteFile("large.txt", data, 1200);
+
+    // unsigned char readdata[1200];
+    // FS_ReadFile("large.txt", readdata, 1200);
+    // int veri = 1;
+    // for(int i = 0; i < 1200; i++){
+    //     if(data[i] != readdata[i]){
+    //         veri = 0;
+    //     }
+    // }
+    // if(veri){
+    //     FbWriteString("File Verification Passed!!!!!\n");
+    // }
 
 
 

@@ -1,6 +1,12 @@
 #ifndef FILESYSTEM_H
 #define FILESYSTEM_H
 
+#define LUKASFS_FAT_START 10
+#define LUKASFS_FAT_SECTORS 160
+#define LUKASFS_DATA_START 170
+#define FAT_FREE 0
+#define FAT_END 0xFFFFFFFF
+
 typedef struct{
     char magic[8];
     unsigned int version;
@@ -33,7 +39,27 @@ int DataSector_FindFree();
 int FS_CreateFile(const char *filename);
 int FS_FindFile(const char *filename);
 int FS_WriteFile(const char *filename, const unsigned char *data, unsigned int size);
-int FS_ReadFile(const char *filename, unsigned char *buffer);
+int FS_ReadFile(const char *filename, unsigned char *buffer, unsigned int bufferSize);
 void ListFiles();
 int FS_DeleteFile(const char *filename);
+int FS_Format(void);
+
+int FAT_ReadEntry(unsigned int index, unsigned int *value);
+int FAT_WriteEntry(unsigned int index, unsigned int value);
+int FAT_FindFreeSector();
+int FAT_AllocateSector(void);
+int FAT_FreeSector(unsigned int sector);
+unsigned int FS_SectorsNeeded(unsigned int size);
+int FAT_LinkSectors(unsigned int current, unsigned int next);
+unsigned int FS_SectorsNeeded(unsigned int size);
+int FAT_AllocateChain(unsigned int count);
+int FAT_FreeChain(unsigned int first);
+int FAT_LinkSectors(unsigned int current, unsigned int next);
+
+int FS_WriteChain(unsigned int first,const unsigned char *data,unsigned int size);
+int FS_WriteDataSector(unsigned int sector,
+                       const unsigned char *data,
+                       unsigned int size);
+
+int FS_ReadChain(unsigned int first, char *buffer, unsigned int size);                    
 #endif
