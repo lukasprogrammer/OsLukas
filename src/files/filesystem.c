@@ -170,10 +170,26 @@ int DataSector_FindFree(){
 }
 
 int FS_CreateFile(const char *filename){
-    int freeEntry = FileEntry_FindFree();
     if(FS_FindFile(filename) >= 0){
         return -4;
     }
+    int freeEntry = FileEntry_FindFree();
+
+
+    if(filename == 0 || filename[0] == '\0'){
+        return -5;
+    }
+
+    unsigned int length = 0;
+
+    while(filename[length] != '\0'){
+        if(length >= 32){
+            return -6;
+        }
+        length++;
+    }
+    
+
     
 
     if(freeEntry < 0){
@@ -194,7 +210,7 @@ int FS_CreateFile(const char *filename){
         entry.filename[i] = filename[i];
         i++;
     }
-    for(int j = 0; j < 23; j++){
+    for(int j = 0; j < 18; j++){
         entry.reserved[j] = 0;
     }
 
@@ -202,6 +218,8 @@ int FS_CreateFile(const char *filename){
     entry.size = 0;
     entry.start_sector = freeSector;
     entry.used = 1;
+    entry.is_directory = 0;
+    entry.parent_index = FS_ROOT_DIR;
 
     if(FileEntry_Write(freeEntry, &entry) != 0){
         FAT_FreeSector(freeSector);
@@ -696,4 +714,44 @@ int FS_ReadChain(unsigned int first, char *buffer, unsigned int size){
         }
     }
     return 0;
+}
+
+int FS_CreateDirectory(const char *name, unsigned int parent_index){
+    if(name == 0 || name[0] == '\0'){
+        return -1;
+    }
+
+    int fileindex = FS_FindFile(name);
+    if(fileindex >=0){
+        return -2;
+    }
+
+    unsigned int entryindex = FileEntry_FindFree();
+    if(entryindex < 0){
+        return -3;
+    }
+
+    LukasFS_FileEntry entry = {};
+
+
+    unsigned int i = 0;
+
+    while(name[i] != '\0' && i < 31){
+        entry.filename[i] = name[i];
+        i++;
+    }
+
+    entry.filename[i] = '\0';
+    entry.size = 0;
+    entry.start_sector = 0;
+    entry.used = 1;
+    entry.is_directory = 1;
+    entry.parent_index = parent_index;
+
+    if(FileEntry_Write(entryindex, &entry) != 0){
+        return -4;
+    }
+    return 0;
+
+
 }

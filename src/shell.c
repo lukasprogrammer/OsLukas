@@ -23,7 +23,7 @@ int StringEquals(const char *a, const char *b){
 }
 void ProcessCommand(const char *input){
     char *argv[100];
-    int argc = ParseCommand(input, argv, 10);
+    int argc = ParseCommand(input, argv, 100);
     if(StringEquals(argv[0], "help")){
         FbMakeColor(VGA_LIGHT_BLUE, bg_color_sys);
         FbWriteString("Available Commands:\nhelp  - Show this help\nclear  - Clear the screen\nticks  - Show timer ticks\necho <msg>  - Echo a message\ncolor <foreground> <background>  - Change interface color\nmemmap  - Show memory map\nalloc  - Allocate first available memory page on stack\nfree <addr>  - Free page of memory on specified memory address\n");
@@ -65,6 +65,15 @@ void ProcessCommand(const char *input){
         FbClear();
         return;
         
+    }else if(StringEquals(argv[0], "format")){
+        if(argc == 1){
+            if(FS_Format() == 0){
+                FbMakeColor(VGA_LIGHT_GREEN, bg_color_sys);
+                FbWriteString("Succesfully formatted system\n");
+                FbMakeColor(fg_color_sys, bg_color_sys);
+            }
+        }
+       
     }else if(StringEquals(argv[0], "write")){
         if(argc < 3){
             FbWriteString("Usage: write <filename> <text>\n");

@@ -6,6 +6,7 @@
 #define LUKASFS_DATA_START 170
 #define FAT_FREE 0
 #define FAT_END 0xFFFFFFFF
+#define FS_ROOT_DIR 0xFFFFFFFF
 
 typedef struct{
     char magic[8];
@@ -21,10 +22,15 @@ typedef struct
     unsigned int size;
     unsigned int start_sector;
     unsigned char used;
-    unsigned char reserved[23];
+
+    unsigned char is_directory;
+    unsigned int parent_index;
+
+    unsigned char reserved[18];
 
 }__attribute__((packed))LukasFS_FileEntry;
-
+_Static_assert(sizeof(LukasFS_FileEntry) == 64,
+               "LukasFS_FileEntry must be 64 bytes");
 
 
 int FileEntry_Read(int index, LukasFS_FileEntry *entry);
